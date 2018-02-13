@@ -189,32 +189,36 @@ int main(int argc, const char *argv[])
 			continue;
 
 		/* dispatch on the command type */
-		if (!strcasecmp(command.text[0], "close"))
-			command_close(&command, session);
-		else if (!strcasecmp(command.text[0], "connect"))
-			session = command_connect(&command, &parameter);
-		else if (!strcasecmp(command.text[0], "get"))
-			command_get(&command, session);
-		else if (!strcasecmp(command.text[0], "dir"))
-			command_dir(&command, session);
-		else if (!strcasecmp(command.text[0], "help"))
-			command_help(&command, session);
-		else if (!strcasecmp(command.text[0], "quit"))
-			command_quit(&command, session);
-		else if (!strcasecmp(command.text[0], "exit"))
-			command_quit(&command, session);
-		else if (!strcasecmp(command.text[0], "bye"))
-			command_quit(&command, session);
-		else if (!strcasecmp(command.text[0], "set"))
-			command_set(&command, &parameter);
+		if (!strcasecmp(command.text[0], "close"))                  command_close(&command, session);
+		else if (!strcasecmp(command.text[0], "connect")) session = command_connect(&command, &parameter);
+		else if (!strcasecmp(command.text[0], "get"))               command_get(&command, session);
+		else if (!strcasecmp(command.text[0], "dir"))               command_dir(&command, session);
+		else if (!strcasecmp(command.text[0], "help"))              command_help(&command, session);
+		else if (!strcasecmp(command.text[0], "quit"))              command_quit(&command, session);
+		else if (!strcasecmp(command.text[0], "exit"))              command_quit(&command, session);
+		else if (!strcasecmp(command.text[0], "bye"))               command_quit(&command, session);
+		else if (!strcasecmp(command.text[0], "set"))               command_set(&command, &parameter);
 		else
 			fprintf(stderr, "Unrecognized command: '%s'.  Use 'HELP' for help.\n\n", command.text[0]);
+
+		/*for( int i = 0; i < command.count; i++ ) {*/
+			/*free( command.text[i] );*/
+		/*}*/
 	}
 
 	/* if we're here, we shouldn't be */
 	return 1;
 }
 
+/*------------------------------------------------------------------------
+ * char *newtmp()
+ *
+ * Return a newly allocated char* buffer for writing to
+ *------------------------------------------------------------------------*/
+char *newtmp()
+{
+	return malloc((sizeof(char)) * 16 * 1024);
+}
 
 /*------------------------------------------------------------------------
  * void parse_command(command_t *command, char *buffer);
@@ -228,24 +232,56 @@ void parse_command(command_t *command, char *buffer)
 	/* reset the count */
 	command->count = 0;
 
-	/* skip past initial whitespace */
-	while (isspace(*buffer) && *buffer)
-		++buffer;
+	char *tmp = command->text[command->count] = newtmp();
+	int quote_flag = 0;
 
-	/* while we have command text left and not too many words */
-	while ((command->count < MAX_COMMAND_WORDS) && *buffer) {
+	for (int i = 0; i < strlen(buffer) + 1; i++) {
+		char c = buffer[i];
 
-		/* save the start of the word */
-		command->text[command->count++] = buffer;
+		if (c == '"') {
+			if (quote_flag) {
+				quote_flag = 0;
+			} else if (!quote_flag) {
+				quote_flag = 1;
+			}
 
-		/* advance to the next whitespace (or the end) */
-		while (*buffer && !isspace(*buffer))
-			++buffer;
+			continue;
+		}
 
-		/* convert the whitespace to terminators */
-		while (*buffer && isspace(*buffer))
-			*(buffer++) = '\0';
+		if (((c == ' ' || c == '\t' || c == '\n') && !quote_flag)
+				|| c == 0) {
+
+			if (strlen(command->text[command->count])) {
+				*tmp = 0;
+				tmp = command->text[++command->count] = newtmp();
+			}
+
+			continue;
+		}
+
+		*(tmp++) = c;
+
 	}
+
+
+	/*[> skip past initial whitespace <]*/
+	/*while (isspace(*buffer) && *buffer)*/
+		/*++buffer;*/
+
+	/*[> while we have command text left and not too many words <]*/
+	/*while ((command->count < MAX_COMMAND_WORDS) && *buffer) {*/
+
+		/*[> save the start of the word <]*/
+		/*command->text[command->count++] = buffer;*/
+
+		/*[> advance to the next whitespace (or the end) <]*/
+		/*while (*buffer && !isspace(*buffer))*/
+			/*++buffer;*/
+
+		/*[> convert the whitespace to terminators <]*/
+		/*while (*buffer && isspace(*buffer))*/
+			/**(buffer++) = '\0';*/
+	/*}*/
 }
 
 
