@@ -72,25 +72,25 @@
  *------------------------------------------------------------------------*/
 void xscript_close(ttp_session_t *session, u_int64_t delta)
 {
-    double mb_thru, mb_good, mb_file, secs;
-    ttp_transfer_t *xfer = &session->transfer;
+	double mb_thru, mb_good, mb_file, secs;
+	ttp_transfer_t *xfer = &session->transfer;
 
-    mb_thru  = xfer->stats.total_blocks * session->parameter->block_size;
-    mb_good  = mb_thru - xfer->stats.total_recvd_retransmits * session->parameter->block_size;
-    mb_file  = xfer->file_size;
-    mb_thru /= (1024.0*1024.0);
-    mb_good /= (1024.0*1024.0);
-    mb_file /= (1024.0*1024.0);
-    secs     = delta/1e6;
+	mb_thru = xfer->stats.total_blocks * session->parameter->block_size;
+	mb_good = mb_thru - xfer->stats.total_recvd_retransmits * session->parameter->block_size;
+	mb_file = xfer->file_size;
+	mb_thru /= (1024.0 * 1024.0);
+	mb_good /= (1024.0 * 1024.0);
+	mb_file /= (1024.0 * 1024.0);
+	secs = delta / 1e6;
 
-    fprintf(xfer->transcript, "mbyte_transmitted = %0.2f\n", mb_thru);
-    fprintf(xfer->transcript, "mbyte_usable = %0.2f\n", mb_good);
-    fprintf(xfer->transcript, "mbyte_file = %0.2f\n", mb_file);
-    fprintf(xfer->transcript, "duration = %0.2f\n", secs);
-    fprintf(xfer->transcript, "throughput = %0.2f\n", 8.0 * mb_thru / secs);
-    fprintf(xfer->transcript, "goodput_with_restarts = %0.2f\n", 8.0 * mb_good / secs);
-    fprintf(xfer->transcript, "file_rate = %0.2f\n", 8.0 * mb_file / secs);
-    fclose(xfer->transcript);
+	fprintf(xfer->transcript, "mbyte_transmitted = %0.2f\n", mb_thru);
+	fprintf(xfer->transcript, "mbyte_usable = %0.2f\n", mb_good);
+	fprintf(xfer->transcript, "mbyte_file = %0.2f\n", mb_file);
+	fprintf(xfer->transcript, "duration = %0.2f\n", secs);
+	fprintf(xfer->transcript, "throughput = %0.2f\n", 8.0 * mb_thru / secs);
+	fprintf(xfer->transcript, "goodput_with_restarts = %0.2f\n", 8.0 * mb_good / secs);
+	fprintf(xfer->transcript, "file_rate = %0.2f\n", 8.0 * mb_file / secs);
+	fclose(xfer->transcript);
 }
 
 
@@ -99,8 +99,8 @@ void xscript_close(ttp_session_t *session, u_int64_t delta)
  *------------------------------------------------------------------------*/
 void xscript_data_log(ttp_session_t *session, const char *logline)
 {
-    fprintf(session->transfer.transcript, "%s", logline);
-    fflush(session->transfer.transcript);
+	fprintf(session->transfer.transcript, "%s", logline);
+	fflush(session->transfer.transcript);
 }
 
 
@@ -113,9 +113,8 @@ void xscript_data_log(ttp_session_t *session, const char *logline)
  *------------------------------------------------------------------------*/
 void xscript_data_start(ttp_session_t *session, const struct timeval *epoch)
 {
-    fprintf(session->transfer.transcript, "START %lu.%06lu\n", 
-       (unsigned long)epoch->tv_sec, (unsigned long)epoch->tv_usec);
-    fflush(session->transfer.transcript);
+	fprintf(session->transfer.transcript, "START %lu.%06lu\n", (unsigned long) epoch->tv_sec, (unsigned long) epoch->tv_usec);
+	fflush(session->transfer.transcript);
 }
 
 
@@ -128,9 +127,8 @@ void xscript_data_start(ttp_session_t *session, const struct timeval *epoch)
  *------------------------------------------------------------------------*/
 void xscript_data_stop(ttp_session_t *session, const struct timeval *epoch)
 {
-    fprintf(session->transfer.transcript, "STOP %lu.%06lu\n\n", 
-       (unsigned long)epoch->tv_sec, (unsigned long)epoch->tv_usec);
-    fflush(session->transfer.transcript);
+	fprintf(session->transfer.transcript, "STOP %lu.%06lu\n\n", (unsigned long) epoch->tv_sec, (unsigned long) epoch->tv_usec);
+	fflush(session->transfer.transcript);
 }
 
 
@@ -142,42 +140,42 @@ void xscript_data_stop(ttp_session_t *session, const struct timeval *epoch)
  *------------------------------------------------------------------------*/
 void xscript_open(ttp_session_t *session)
 {
-    ttp_transfer_t  *xfer  = &session->transfer;
-    ttp_parameter_t *param =  session->parameter;
-    char             filename[64];
+	ttp_transfer_t *xfer = &session->transfer;
+	ttp_parameter_t *param = session->parameter;
+	char filename[64];
 
-    /* open the transcript file */
-    make_transcript_filename(filename, xfer->epoch, "tsuc");
-    xfer->transcript = fopen(filename, "w");
-    if (xfer->transcript == NULL) {
-	warn("Could not create transcript file");
-	return;
-    }
+	/* open the transcript file */
+	make_transcript_filename(filename, xfer->epoch, "tsuc");
+	xfer->transcript = fopen(filename, "w");
+	if (xfer->transcript == NULL) {
+		warn("Could not create transcript file");
+		return;
+	}
 
-    /* write out all the header information */
-    fprintf(xfer->transcript, "remote_filename = %s\n", xfer->remote_filename);
-    fprintf(xfer->transcript, "local_filename = %s\n",  xfer->local_filename);
-    fprintf(xfer->transcript, "file_size = %llu\n",     (ull_t)xfer->file_size);
-    fprintf(xfer->transcript, "block_count = %u\n",     xfer->block_count);
-    fprintf(xfer->transcript, "udp_buffer = %u\n",      param->udp_buffer);
-    fprintf(xfer->transcript, "block_size = %u\n",      param->block_size);
-    fprintf(xfer->transcript, "target_rate = %u\n",     param->target_rate);
-    fprintf(xfer->transcript, "error_rate = %u\n",      param->error_rate);
-    fprintf(xfer->transcript, "slower_num = %u\n",      param->slower_num);
-    fprintf(xfer->transcript, "slower_den = %u\n",      param->slower_den);
-    fprintf(xfer->transcript, "faster_num = %u\n",      param->faster_num);
-    fprintf(xfer->transcript, "faster_den = %u\n",      param->faster_den);
-    fprintf(xfer->transcript, "history = %u\n",         param->history);
-    fprintf(xfer->transcript, "lossless = %u\n",        param->lossless);
-    fprintf(xfer->transcript, "losswindow = %u\n",      param->losswindow_ms);
-    fprintf(xfer->transcript, "blockdump = %u\n",       param->blockdump);
-    fprintf(xfer->transcript, "update_period = %llu\n", UPDATE_PERIOD);
-    fprintf(xfer->transcript, "rexmit_period = %llu\n", UPDATE_PERIOD);
-    fprintf(xfer->transcript, "protocol_version = 0x%x\n", PROTOCOL_REVISION);
-    fprintf(xfer->transcript, "software_version = %s\n",   TSUNAMI_CVS_BUILDNR);
-    fprintf(xfer->transcript, "ipv6 = %u\n",            param->ipv6_yn);
-    fprintf(xfer->transcript, "\n");
-    fflush(session->transfer.transcript);
+	/* write out all the header information */
+	fprintf(xfer->transcript, "remote_filename = %s\n", xfer->remote_filename);
+	fprintf(xfer->transcript, "local_filename = %s\n", xfer->local_filename);
+	fprintf(xfer->transcript, "file_size = %llu\n", (ull_t) xfer->file_size);
+	fprintf(xfer->transcript, "block_count = %u\n", xfer->block_count);
+	fprintf(xfer->transcript, "udp_buffer = %u\n", param->udp_buffer);
+	fprintf(xfer->transcript, "block_size = %u\n", param->block_size);
+	fprintf(xfer->transcript, "target_rate = %u\n", param->target_rate);
+	fprintf(xfer->transcript, "error_rate = %u\n", param->error_rate);
+	fprintf(xfer->transcript, "slower_num = %u\n", param->slower_num);
+	fprintf(xfer->transcript, "slower_den = %u\n", param->slower_den);
+	fprintf(xfer->transcript, "faster_num = %u\n", param->faster_num);
+	fprintf(xfer->transcript, "faster_den = %u\n", param->faster_den);
+	fprintf(xfer->transcript, "history = %u\n", param->history);
+	fprintf(xfer->transcript, "lossless = %u\n", param->lossless);
+	fprintf(xfer->transcript, "losswindow = %u\n", param->losswindow_ms);
+	fprintf(xfer->transcript, "blockdump = %u\n", param->blockdump);
+	fprintf(xfer->transcript, "update_period = %llu\n", UPDATE_PERIOD);
+	fprintf(xfer->transcript, "rexmit_period = %llu\n", UPDATE_PERIOD);
+	fprintf(xfer->transcript, "protocol_version = 0x%x\n", PROTOCOL_REVISION);
+	fprintf(xfer->transcript, "software_version = %s\n", TSUNAMI_CVS_BUILDNR);
+	fprintf(xfer->transcript, "ipv6 = %u\n", param->ipv6_yn);
+	fprintf(xfer->transcript, "\n");
+	fflush(session->transfer.transcript);
 }
 
 

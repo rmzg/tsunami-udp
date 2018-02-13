@@ -61,12 +61,12 @@
  * INFORMATION GENERATED USING SOFTWARE.
  *========================================================================*/
 
-#include <stdlib.h>       /* for *alloc() and free()               */
-#include <string.h>       /* for standard string routines          */
-#include <sys/socket.h>   /* for the BSD socket library            */
-#include <sys/time.h>     /* for gettimeofday()                    */
-#include <time.h>         /* for time()                            */
-#include <unistd.h>       /* for standard Unix system calls        */
+#include <stdlib.h>							/* for *alloc() and free()               */
+#include <string.h>							/* for standard string routines          */
+#include <sys/socket.h>					/* for the BSD socket library            */
+#include <sys/time.h>						/* for gettimeofday()                    */
+#include <time.h>								/* for time()                            */
+#include <unistd.h>							/* for standard Unix system calls        */
 
 #include <tsunami-client.h>
 //#define DEBUG_RETX xxx // enable to show retransmit debug infos
@@ -91,35 +91,35 @@
  *         result byte of 0.  Otherwise, it transmits a non-zero
  *         result byte.
  *------------------------------------------------------------------------*/
-int ttp_authenticate(ttp_session_t *session, u_char *secret)
+int ttp_authenticate(ttp_session_t *session, u_char * secret)
 {
-    u_char  random[64];  /* the buffer of random data               */
-    u_char  digest[16];  /* the MD5 message digest (for the server) */
-    u_char  result;      /* the result byte from the server         */
-    int     status;      /* return status from function calls       */
+	u_char random[64];						/* the buffer of random data               */
+	u_char digest[16];						/* the MD5 message digest (for the server) */
+	u_char result;								/* the result byte from the server         */
+	int status;										/* return status from function calls       */
 
-    /* read in the shared secret and the challenge */
-    status = fread(random, 1, 64, session->server);
-    if (status < 64)
-	return warn("Could not read authentication challenge from server");
+	/* read in the shared secret and the challenge */
+	status = fread(random, 1, 64, session->server);
+	if (status < 64)
+		return warn("Could not read authentication challenge from server");
 
-    /* prepare the proof of the shared secret and destroy the password */
-    prepare_proof(random, 64, secret, digest);
-    while (*secret)
-	*(secret++) = '\0';
+	/* prepare the proof of the shared secret and destroy the password */
+	prepare_proof(random, 64, secret, digest);
+	while (*secret)
+		*(secret++) = '\0';
 
-    /* send the response to the server */
-    status = fwrite(digest, 1, 16, session->server);
-    if ((status < 16) || fflush(session->server))
-	return warn("Could not send authentication response");
+	/* send the response to the server */
+	status = fwrite(digest, 1, 16, session->server);
+	if ((status < 16) || fflush(session->server))
+		return warn("Could not send authentication response");
 
-    /* read the results back from the server */
-    status = fread(&result, 1, 1, session->server);
-    if (status < 1)
-	return warn("Could not read authentication status");
+	/* read the results back from the server */
+	status = fread(&result, 1, 1, session->server);
+	if (status < 1)
+		return warn("Could not read authentication status");
 
-    /* check the result byte */
-    return (result == 0) ? 0 : -1;
+	/* check the result byte */
+	return (result == 0) ? 0 : -1;
 }
 
 
@@ -135,22 +135,22 @@ int ttp_authenticate(ttp_session_t *session, u_char *secret)
  *------------------------------------------------------------------------*/
 int ttp_negotiate(ttp_session_t *session)
 {
-    u_int32_t server_revision;
-    u_int32_t client_revision = htonl(PROTOCOL_REVISION);
-    int       status;
+	u_int32_t server_revision;
+	u_int32_t client_revision = htonl(PROTOCOL_REVISION);
+	int status;
 
-    /* send our protocol revision number to the server */
-    status = fwrite(&client_revision, 4, 1, session->server);
-    if ((status < 1) || fflush(session->server))
-	return warn("Could not send protocol revision number");
+	/* send our protocol revision number to the server */
+	status = fwrite(&client_revision, 4, 1, session->server);
+	if ((status < 1) || fflush(session->server))
+		return warn("Could not send protocol revision number");
 
-    /* read the protocol revision number from the server */
-    status = fread(&server_revision, 4, 1, session->server);
-    if (status < 1)
-	return warn("Could not read protocol revision number");
+	/* read the protocol revision number from the server */
+	status = fread(&server_revision, 4, 1, session->server);
+	if (status < 1)
+		return warn("Could not read protocol revision number");
 
-    /* compare the numbers */
-    return (client_revision == server_revision) ? 0 : -1;
+	/* compare the numbers */
+	return (client_revision == server_revision) ? 0 : -1;
 }
 
 
@@ -167,96 +167,118 @@ int ttp_negotiate(ttp_session_t *session)
  *------------------------------------------------------------------------*/
 int ttp_open_transfer(ttp_session_t *session, const char *remote_filename, const char *local_filename)
 {
-    u_char           result;    /* the result byte from the server     */
-    u_int32_t        temp;      /* used for transmitting 32-bit values */
-    u_int16_t        temp16;    /* used for transmitting 16-bit values */
-    int              status;
-    ttp_transfer_t  *xfer  = &session->transfer;
-    ttp_parameter_t *param =  session->parameter;
+	u_char result;								/* the result byte from the server     */
+	u_int32_t temp;								/* used for transmitting 32-bit values */
+	u_int16_t temp16;							/* used for transmitting 16-bit values */
+	int status;
+	ttp_transfer_t *xfer = &session->transfer;
+	ttp_parameter_t *param = session->parameter;
 
-    /* submit the transfer request */
-    status = fprintf(session->server, "%s\n", remote_filename);
-    if ((status <= 0) || fflush(session->server))
-	return warn("Could not request file");
+	/* submit the transfer request */
+	status = fprintf(session->server, "%s\n", remote_filename);
+	if ((status <= 0) || fflush(session->server))
+		return warn("Could not request file");
 
-    /* see if the request was successful */
-    status = fread(&result, 1, 1, session->server);
-    if (status < 1)
-	return warn("Could not read response to file request");
+	/* see if the request was successful */
+	status = fread(&result, 1, 1, session->server);
+	if (status < 1)
+		return warn("Could not read response to file request");
 
-    /* make sure the result was a good one */
-    if (result != 0)
-	return warn("Server: File does not exist or cannot be transmitted");
+	/* make sure the result was a good one */
+	if (result != 0)
+		return warn("Server: File does not exist or cannot be transmitted");
 
-    /* Submit the block size, target bitrate, and maximum error rate */
-    temp = htonl(param->block_size);   if (fwrite(&temp, 4, 1, session->server) < 1) return warn("Could not submit block size");
-    temp = htonl(param->target_rate);  if (fwrite(&temp, 4, 1, session->server) < 1) return warn("Could not submit target rate");
-    temp = htonl(param->error_rate);   if (fwrite(&temp, 4, 1, session->server) < 1) return warn("Could not submit error rate");
-    if (fflush(session->server))
-	return warn("Could not flush control channel");
+	/* Submit the block size, target bitrate, and maximum error rate */
+	temp = htonl(param->block_size);
+	if (fwrite(&temp, 4, 1, session->server) < 1)
+		return warn("Could not submit block size");
+	temp = htonl(param->target_rate);
+	if (fwrite(&temp, 4, 1, session->server) < 1)
+		return warn("Could not submit target rate");
+	temp = htonl(param->error_rate);
+	if (fwrite(&temp, 4, 1, session->server) < 1)
+		return warn("Could not submit error rate");
+	if (fflush(session->server))
+		return warn("Could not flush control channel");
 
-    /* submit the slower and faster factors */
-    temp16 = htons(param->slower_num);  if (fwrite(&temp16, 2, 1, session->server) < 1) return warn("Could not submit slowdown numerator");
-    temp16 = htons(param->slower_den);  if (fwrite(&temp16, 2, 1, session->server) < 1) return warn("Could not submit slowdown denominator");
-    temp16 = htons(param->faster_num);  if (fwrite(&temp16, 2, 1, session->server) < 1) return warn("Could not submit speedup numerator");
-    temp16 = htons(param->faster_den);  if (fwrite(&temp16, 2, 1, session->server) < 1) return warn("Could not submit speedup denominator");
-    if (fflush(session->server))
-	return warn("Could not flush control channel");
+	/* submit the slower and faster factors */
+	temp16 = htons(param->slower_num);
+	if (fwrite(&temp16, 2, 1, session->server) < 1)
+		return warn("Could not submit slowdown numerator");
+	temp16 = htons(param->slower_den);
+	if (fwrite(&temp16, 2, 1, session->server) < 1)
+		return warn("Could not submit slowdown denominator");
+	temp16 = htons(param->faster_num);
+	if (fwrite(&temp16, 2, 1, session->server) < 1)
+		return warn("Could not submit speedup numerator");
+	temp16 = htons(param->faster_den);
+	if (fwrite(&temp16, 2, 1, session->server) < 1)
+		return warn("Could not submit speedup denominator");
+	if (fflush(session->server))
+		return warn("Could not flush control channel");
 
-    /* populate the fields of the transfer object */
-    memset(xfer, 0, sizeof(*xfer));
-    xfer->remote_filename = remote_filename;
-    xfer->local_filename  = local_filename;
+	/* populate the fields of the transfer object */
+	memset(xfer, 0, sizeof(*xfer));
+	xfer->remote_filename = remote_filename;
+	xfer->local_filename = local_filename;
 
-    /* read in the file length, block size, block count, and run epoch */
-    if (fread(&xfer->file_size,   8, 1, session->server) < 1) return warn("Could not read file size");         xfer->file_size   = ntohll(xfer->file_size);
-    if (fread(&temp,              4, 1, session->server) < 1) return warn("Could not read block size");        if (htonl(temp) != param->block_size) return warn("Block size disagreement");
-    if (fread(&xfer->block_count, 4, 1, session->server) < 1) return warn("Could not read number of blocks");  xfer->block_count = ntohl (xfer->block_count);
-    if (fread(&xfer->epoch,       4, 1, session->server) < 1) return warn("Could not read run epoch");         xfer->epoch       = ntohl (xfer->epoch);
+	/* read in the file length, block size, block count, and run epoch */
+	if (fread(&xfer->file_size, 8, 1, session->server) < 1)
+		return warn("Could not read file size");
+	xfer->file_size = ntohll(xfer->file_size);
+	if (fread(&temp, 4, 1, session->server) < 1)
+		return warn("Could not read block size");
+	if (htonl(temp) != param->block_size)
+		return warn("Block size disagreement");
+	if (fread(&xfer->block_count, 4, 1, session->server) < 1)
+		return warn("Could not read number of blocks");
+	xfer->block_count = ntohl(xfer->block_count);
+	if (fread(&xfer->epoch, 4, 1, session->server) < 1)
+		return warn("Could not read run epoch");
+	xfer->epoch = ntohl(xfer->epoch);
 
-    /* we start out with every block yet to transfer */
-    xfer->blocks_left = xfer->block_count;
+	/* we start out with every block yet to transfer */
+	xfer->blocks_left = xfer->block_count;
 
-    /* try to open the local file for writing */
-    if (!access(xfer->local_filename, F_OK))
-        printf("Warning: overwriting existing file '%s'\n", local_filename);     
-    xfer->file = fopen(xfer->local_filename, "wb");
-    if (xfer->file == NULL) {
-        char * trimmed = rindex(xfer->local_filename, '/');
-        if ((trimmed != NULL) && (strlen(trimmed)>1)) {
-           printf("Warning: could not open file %s for writing, trying local directory instead.\n", xfer->local_filename);
-           xfer->local_filename = trimmed + 1;
-           if (!access(xfer->local_filename, F_OK))
-              printf("Warning: overwriting existing file '%s'\n", xfer->local_filename);     
-           xfer->file = fopen(xfer->local_filename, "wb");
-        }
-        if(xfer->file == NULL) {
-           return warn("Could not open local file for writing");
-        }
-    }
+	/* try to open the local file for writing */
+	if (!access(xfer->local_filename, F_OK))
+		printf("Warning: overwriting existing file '%s'\n", local_filename);
+	xfer->file = fopen(xfer->local_filename, "wb");
+	if (xfer->file == NULL) {
+		char *trimmed = rindex(xfer->local_filename, '/');
+		if ((trimmed != NULL) && (strlen(trimmed) > 1)) {
+			printf("Warning: could not open file %s for writing, trying local directory instead.\n", xfer->local_filename);
+			xfer->local_filename = trimmed + 1;
+			if (!access(xfer->local_filename, F_OK))
+				printf("Warning: overwriting existing file '%s'\n", xfer->local_filename);
+			xfer->file = fopen(xfer->local_filename, "wb");
+		}
+		if (xfer->file == NULL) {
+			return warn("Could not open local file for writing");
+		}
+	}
+#ifdef VSIB_REALTIME
+	/* try to open the vsib for output */
+	xfer->vsib = fopen("/dev/vsib", "wb");
+	if (xfer->vsib == NULL)
+		return warn("VSIB board does not exist in /dev/vsib or it cannot be read");
 
-    #ifdef VSIB_REALTIME
-    /* try to open the vsib for output */
-    xfer->vsib = fopen("/dev/vsib", "wb");
-    if (xfer->vsib == NULL)
-    return warn("VSIB board does not exist in /dev/vsib or it cannot be read");
-    
-    /* pre-reserve the ring buffer */  
-    param->ringbuf = malloc(param->block_size * RINGBUF_BLOCKS); 
-    if (param->ringbuf == NULL)
-    return warn("Could not reserve space for ring buffer");
-    #endif
+	/* pre-reserve the ring buffer */
+	param->ringbuf = malloc(param->block_size * RINGBUF_BLOCKS);
+	if (param->ringbuf == NULL)
+		return warn("Could not reserve space for ring buffer");
+#endif
 
-    /* make crude estimate of blocks on the wire if RTT delay is 500ms */
-    xfer->on_wire_estimate = (u_int32_t)(0.5 * param->target_rate/(8*param->block_size));
-    xfer->on_wire_estimate = min(xfer->block_count, xfer->on_wire_estimate);
+	/* make crude estimate of blocks on the wire if RTT delay is 500ms */
+	xfer->on_wire_estimate = (u_int32_t) (0.5 * param->target_rate / (8 * param->block_size));
+	xfer->on_wire_estimate = min(xfer->block_count, xfer->on_wire_estimate);
 
-    /* if we're doing a transcript */
-    if (param->transcript_yn)
-	xscript_open(session);
+	/* if we're doing a transcript */
+	if (param->transcript_yn)
+		xscript_open(session);
 
-    /* indicate success */
-    return 0;
+	/* indicate success */
+	return 0;
 }
 
 
@@ -269,32 +291,33 @@ int ttp_open_transfer(ttp_session_t *session, const char *remote_filename, const
  *------------------------------------------------------------------------*/
 int ttp_open_port(ttp_session_t *session)
 {
-    struct sockaddr udp_address;
-    unsigned int    udp_length = sizeof(udp_address);
-    int             status;
-    u_int16_t      *port;
+	struct sockaddr udp_address;
+	unsigned int udp_length = sizeof(udp_address);
+	int status;
+	u_int16_t *port;
 
-    /* open a new datagram socket */
-    session->transfer.udp_fd = create_udp_socket(session->parameter);
-    if (session->transfer.udp_fd < 0)
-	return warn("Could not create UDP socket");
+	/* open a new datagram socket */
+	session->transfer.udp_fd = create_udp_socket(session->parameter);
+	if (session->transfer.udp_fd < 0)
+		return warn("Could not create UDP socket");
 
-    /* find out the port number we're using */
-    memset(&udp_address, 0, sizeof(udp_address));
-    getsockname(session->transfer.udp_fd, (struct sockaddr *) &udp_address, &udp_length);
+	/* find out the port number we're using */
+	memset(&udp_address, 0, sizeof(udp_address));
+	getsockname(session->transfer.udp_fd, (struct sockaddr *) &udp_address, &udp_length);
 
-    /* get a hold of the port number */
-    port = (session->parameter->ipv6_yn ? &((struct sockaddr_in6 *) &udp_address)->sin6_port : &((struct sockaddr_in *) &udp_address)->sin_port);
+	/* get a hold of the port number */
+	port =
+			(session->parameter->ipv6_yn ? &((struct sockaddr_in6 *) &udp_address)->sin6_port : &((struct sockaddr_in *) &udp_address)->sin_port);
 
-    /* send that port number to the server */
-    status = fwrite(port, 2, 1, session->server);
-    if ((status < 1) || fflush(session->server)) {
-	close(session->transfer.udp_fd);
-	return warn("Could not send UDP port number");
-    }
+	/* send that port number to the server */
+	status = fwrite(port, 2, 1, session->server);
+	if ((status < 1) || fflush(session->server)) {
+		close(session->transfer.udp_fd);
+		return warn("Could not send UDP port number");
+	}
 
-    /* we succeeded */
-    return 0;
+	/* we succeeded */
+	return 0;
 }
 
 
@@ -309,106 +332,106 @@ int ttp_open_port(ttp_session_t *session)
  *------------------------------------------------------------------------*/
 int ttp_repeat_retransmit(ttp_session_t *session)
 {
-    retransmission_t  retransmission[MAX_RETRANSMISSION_BUFFER];  /* the retransmission request object        */
-    int               entry;                                      /* an index into the retransmission table   */
-    int               status;
-    int               block;
-    int               count = 0;
-    retransmit_t     *rexmit = &(session->transfer.retransmit);
-    ttp_transfer_t   *xfer = &session->transfer;
+	retransmission_t retransmission[MAX_RETRANSMISSION_BUFFER];	/* the retransmission request object        */
+	int entry;										/* an index into the retransmission table   */
+	int status;
+	int block;
+	int count = 0;
+	retransmit_t *rexmit = &(session->transfer.retransmit);
+	ttp_transfer_t *xfer = &session->transfer;
 
-    #ifdef DEBUG_RETX
-    fprintf(stderr, "ttp_repeat_retransmit: index_max=%u\n", rexmit->index_max);
-    #endif
+#ifdef DEBUG_RETX
+	fprintf(stderr, "ttp_repeat_retransmit: index_max=%u\n", rexmit->index_max);
+#endif
 
-    /* reset */
-    memset(retransmission, 0, sizeof(retransmission));
-    xfer->stats.this_retransmits = 0;
-    count = 0;
+	/* reset */
+	memset(retransmission, 0, sizeof(retransmission));
+	xfer->stats.this_retransmits = 0;
+	count = 0;
 
-    /* discard received blocks from the list and prepare retransmit requests */
-    for (entry = 0; (entry<rexmit->index_max) && (count<MAX_RETRANSMISSION_BUFFER); ++entry) {
+	/* discard received blocks from the list and prepare retransmit requests */
+	for (entry = 0; (entry < rexmit->index_max) && (count < MAX_RETRANSMISSION_BUFFER); ++entry) {
 
-        /* get the block number */
-        block = rexmit->table[entry];
+		/* get the block number */
+		block = rexmit->table[entry];
 
-        /* if we want the block */
-        if (block && !got_block(session, block)) {
+		/* if we want the block */
+		if (block && !got_block(session, block)) {
 
-            /* save it */
-            rexmit->table[count] = block;
+			/* save it */
+			rexmit->table[count] = block;
 
-            /* insert retransmit request */
-            retransmission[count].request_type = htons(REQUEST_RETRANSMIT);
-            retransmission[count].block        = htonl(block);
-            ++count;
+			/* insert retransmit request */
+			retransmission[count].request_type = htons(REQUEST_RETRANSMIT);
+			retransmission[count].block = htonl(block);
+			++count;
 
-            #ifdef DEBUG_RETX
-            // printf("retx %lu\n", block);
-            #endif
-        }
-    }
+#ifdef DEBUG_RETX
+			// printf("retx %lu\n", block);
+#endif
+		}
+	}
 
-    /* if there are too many entries, restart transfer from earlier point */
-    if (count >= MAX_RETRANSMISSION_BUFFER) {
+	/* if there are too many entries, restart transfer from earlier point */
+	if (count >= MAX_RETRANSMISSION_BUFFER) {
 
-        /* restart from first missing block */
-        block                          = min(xfer->block_count, xfer->gapless_to_block + 1);
-        retransmission[0].request_type = htons(REQUEST_RESTART);
-        retransmission[0].block        = htonl(block);
+		/* restart from first missing block */
+		block = min(xfer->block_count, xfer->gapless_to_block + 1);
+		retransmission[0].request_type = htons(REQUEST_RESTART);
+		retransmission[0].block = htonl(block);
 
-        /* send out the request */
-        status = fwrite(&retransmission[0], sizeof(retransmission[0]), 1, session->server);
-        if (status <= 0) {
-            return warn("Could not send restart-at request");
-        }
+		/* send out the request */
+		status = fwrite(&retransmission[0], sizeof(retransmission[0]), 1, session->server);
+		if (status <= 0) {
+			return warn("Could not send restart-at request");
+		}
 
-        /* remember the request so we can then ignore blocks that are still on the wire */
-        xfer->restart_pending        = 1;
-        xfer->restart_lastidx        = rexmit->table[rexmit->index_max - 1];
-        xfer->restart_wireclearidx   = min(xfer->block_count, xfer->restart_lastidx + xfer->on_wire_estimate);
+		/* remember the request so we can then ignore blocks that are still on the wire */
+		xfer->restart_pending = 1;
+		xfer->restart_lastidx = rexmit->table[rexmit->index_max - 1];
+		xfer->restart_wireclearidx = min(xfer->block_count, xfer->restart_lastidx + xfer->on_wire_estimate);
 
-        #ifdef DEBUG_RETX
-        printf("ttp_repeat_restransmit: restart_pending=1, range %u to %u, clear at %u, gapless to %u, old head %u\n",
-               block, xfer->restart_lastidx, xfer->restart_wireclearidx, xfer->gapless_to_block, xfer->next_block);
-        #endif
+#ifdef DEBUG_RETX
+		printf("ttp_repeat_restransmit: restart_pending=1, range %u to %u, clear at %u, gapless to %u, old head %u\n",
+					 block, xfer->restart_lastidx, xfer->restart_wireclearidx, xfer->gapless_to_block, xfer->next_block);
+#endif
 
-        /* reset the retransmission table and head block */
-        rexmit->index_max = 0;
-        xfer->next_block  = block;
+		/* reset the retransmission table and head block */
+		rexmit->index_max = 0;
+		xfer->next_block = block;
 
-       xfer->stats.this_retransmits = MAX_RETRANSMISSION_BUFFER;
+		xfer->stats.this_retransmits = MAX_RETRANSMISSION_BUFFER;
 
-    /* queue is small enough */
-    } else {
+		/* queue is small enough */
+	} else {
 
-        /* update to shrunken size */
-        rexmit->index_max = count;
+		/* update to shrunken size */
+		rexmit->index_max = count;
 
-        /* update the statistics */
-        xfer->stats.this_retransmits   = count;
-        xfer->stats.total_retransmits += count;
+		/* update the statistics */
+		xfer->stats.this_retransmits = count;
+		xfer->stats.total_retransmits += count;
 
-        /* send out the requests */
-        if (count > 0) {
-            status = fwrite(retransmission, sizeof(retransmission_t), count, session->server);
-            if (status <= 0) {
-                return warn("Could not send retransmit requests");
-            }
-        }
+		/* send out the requests */
+		if (count > 0) {
+			status = fwrite(retransmission, sizeof(retransmission_t), count, session->server);
+			if (status <= 0) {
+				return warn("Could not send retransmit requests");
+			}
+		}
 
-    }//if(num entries)
+	}															//if(num entries)
 
-    /* flush the server connection */
-    if (fflush(session->server)) {
-        return warn("Could not flush retransmit requests");
-    }
+	/* flush the server connection */
+	if (fflush(session->server)) {
+		return warn("Could not flush retransmit requests");
+	}
 
-    /* we succeeded */
-    #ifdef DEBUG_RETX
-    fprintf(stderr, "ttp_repeat_retransmit: post-index_max=%u\n", rexmit->index_max);
-    #endif
-    return 0;
+	/* we succeeded */
+#ifdef DEBUG_RETX
+	fprintf(stderr, "ttp_repeat_retransmit: post-index_max=%u\n", rexmit->index_max);
+#endif
+	return 0;
 }
 
 
@@ -420,82 +443,81 @@ int ttp_repeat_retransmit(ttp_session_t *session)
  *------------------------------------------------------------------------*/
 int ttp_request_retransmit(ttp_session_t *session, u_int32_t block)
 {
-   #ifdef RETX_REQBLOCK_SORTING
-   u_int32_t     tmp32_ins = 0, tmp32_up;
-   u_int32_t     idx = 0;
-   #endif
+#ifdef RETX_REQBLOCK_SORTING
+	u_int32_t tmp32_ins = 0, tmp32_up;
+	u_int32_t idx = 0;
+#endif
 
-   u_int32_t    *ptr;
-   retransmit_t *rexmit = &(session->transfer.retransmit);
+	u_int32_t *ptr;
+	retransmit_t *rexmit = &(session->transfer.retransmit);
 
-   /* double checking: if we already got the block, don't add it */
-   if (got_block(session, block)) {
-      return 0;
-   }
+	/* double checking: if we already got the block, don't add it */
+	if (got_block(session, block)) {
+		return 0;
+	}
 
-   /* if we don't have space for the request */
-   if (rexmit->index_max >= rexmit->table_size) {
+	/* if we don't have space for the request */
+	if (rexmit->index_max >= rexmit->table_size) {
 
-      /* don't overgrow the table */
-      if (rexmit->index_max >= 32*MAX_RETRANSMISSION_BUFFER)
-         return 0;
+		/* don't overgrow the table */
+		if (rexmit->index_max >= 32 * MAX_RETRANSMISSION_BUFFER)
+			return 0;
 
-      /* try to reallocate the table twice the size*/
-      ptr = (u_int32_t *) realloc(rexmit->table, 2 * sizeof(u_int32_t)*rexmit->table_size);
-      if (ptr == NULL)
-         return warn("Could not grow retransmission table");
+		/* try to reallocate the table twice the size */
+		ptr = (u_int32_t *) realloc(rexmit->table, 2 * sizeof(u_int32_t) * rexmit->table_size);
+		if (ptr == NULL)
+			return warn("Could not grow retransmission table");
 
-      /* prepare the new table space */
-      rexmit->table = ptr;
-      memset(rexmit->table + rexmit->table_size, 0, sizeof(u_int32_t) * rexmit->table_size);
-      rexmit->table_size *= 2;
+		/* prepare the new table space */
+		rexmit->table = ptr;
+		memset(rexmit->table + rexmit->table_size, 0, sizeof(u_int32_t) * rexmit->table_size);
+		rexmit->table_size *= 2;
 
-      #if DEBUG_RETX
-      fprintf(stderr, "ttp_request_retransmit: new table size is %u entries\n", rexmit->table_size);
-      #endif
-   }
+#if DEBUG_RETX
+		fprintf(stderr, "ttp_request_retransmit: new table size is %u entries\n", rexmit->table_size);
+#endif
+	}
+#ifndef RETX_REQBLOCK_SORTING
 
-   #ifndef RETX_REQBLOCK_SORTING
+	/* store the request */
+	rexmit->table[rexmit->index_max] = block;
+	rexmit->index_max++;
 
-   /* store the request */
-   rexmit->table[rexmit->index_max] = block;
-   rexmit->index_max++;
+#else
 
-   #else
+	/* 
+	 * Store the request via "insertion sort"
+	 * this maintains a sequentially sorted table and discards duplicate requests,
+	 * and does not flood the net with so many unnecessary retransmissions like old Tsunami did
+	 * -- however, this can be very slow on high loss transfers! with slow CPU this causes
+	 *    even more loss : consider well if you want to enable the feature or not
+	 */
 
-   /* 
-    * Store the request via "insertion sort"
-    * this maintains a sequentially sorted table and discards duplicate requests,
-    * and does not flood the net with so many unnecessary retransmissions like old Tsunami did
-    * -- however, this can be very slow on high loss transfers! with slow CPU this causes
-    *    even more loss : consider well if you want to enable the feature or not
-    */
+	/* seek to insertion point or end - could use binary search here... */
+	while ((idx < rexmit->index_max) && (rexmit->table[idx] < block)) {
+		idx++;
+	}
 
-   /* seek to insertion point or end - could use binary search here... */
-   while ((idx < rexmit->index_max) && (rexmit->table[idx] < block)) {
-     idx++; 
-   }
+	/* insert the entry */
+	if (idx == rexmit->index_max) {
+		rexmit->table[rexmit->index_max] = block;
+		rexmit->index_max++;
+	} else if (rexmit->table[idx] == block) {
+		// fprintf(stderr, "duplicate retransmit req for block %d discarded\n", block);
+	} else {
+		/* insert and shift remaining table upwards - linked list could be nice... */
+		tmp32_ins = block;
+		do {
+			tmp32_up = rexmit->table[idx];
+			rexmit->table[idx++] = tmp32_ins;
+			tmp32_ins = tmp32_up;
+		} while (idx <= rexmit->index_max);
+		rexmit->index_max++;
+	}
+#endif
 
-   /* insert the entry */
-   if (idx == rexmit->index_max) { 
-      rexmit->table[rexmit->index_max] = block;
-      rexmit->index_max++;
-   } else if (rexmit->table[idx] == block) { 
-      // fprintf(stderr, "duplicate retransmit req for block %d discarded\n", block);
-   } else { 
-      /* insert and shift remaining table upwards - linked list could be nice... */
-      tmp32_ins = block;
-      do {
-         tmp32_up = rexmit->table[idx];
-         rexmit->table[idx++] = tmp32_ins;
-         tmp32_ins = tmp32_up;
-      } while(idx <= rexmit->index_max);
-      rexmit->index_max++;
-   }
-   #endif
-
-   /* we succeeded */
-   return 0;
+	/* we succeeded */
+	return 0;
 }
 
 
@@ -510,26 +532,26 @@ int ttp_request_retransmit(ttp_session_t *session, u_int32_t block)
  *------------------------------------------------------------------------*/
 int ttp_request_stop(ttp_session_t *session)
 {
-    retransmission_t retransmission = { 0, 0, 0 };
-    int              status;
+	retransmission_t retransmission = { 0, 0, 0 };
+	int status;
 
-    /* initialize the retransmission structure */
-    retransmission.request_type = htons(REQUEST_STOP);
+	/* initialize the retransmission structure */
+	retransmission.request_type = htons(REQUEST_STOP);
 
-    /* send out the request */
-    status = fwrite(&retransmission, sizeof(retransmission), 1, session->server);
-    if ((status <= 0) || fflush(session->server))
-       return warn("Could not request end of transmission");
-    
-    #ifdef VSIB_REALTIME
-    /* Wait until ring buffer is empty, then stop vsib and free buffer memory*/
-    stop_vsib(session);
-    free(session->parameter->ringbuf);
-    session->parameter->ringbuf = NULL; /* it is no more... */ 
-    #endif
+	/* send out the request */
+	status = fwrite(&retransmission, sizeof(retransmission), 1, session->server);
+	if ((status <= 0) || fflush(session->server))
+		return warn("Could not request end of transmission");
 
-    /* we succeeded */
-    return 0;
+#ifdef VSIB_REALTIME
+	/* Wait until ring buffer is empty, then stop vsib and free buffer memory */
+	stop_vsib(session);
+	free(session->parameter->ringbuf);
+	session->parameter->ringbuf = NULL;	/* it is no more... */
+#endif
+
+	/* we succeeded */
+	return 0;
 }
 
 
@@ -542,160 +564,158 @@ int ttp_request_stop(ttp_session_t *session)
  *------------------------------------------------------------------------*/
 int ttp_update_stats(ttp_session_t *session)
 {
-    time_t            now_epoch = time(NULL);                 /* the current Unix epoch                         */
-    u_int64_t         delta;                                  /* time delta since last statistics update (usec) */
-    double            d_seconds;
-    u_int64_t         delta_total;                            /* time delta since start of transmission (usec)  */
-    double            d_seconds_total;
-    u_int64_t         temp;                                   /* temporary value for building the elapsed time  */
-    int               hours, minutes, seconds, milliseconds;  /* parts of the elapsed time                      */
-    double            data_total;                             /* the total amount of data transferred (bytes)   */
-    double            data_total_rate;
-    double            data_this;                              /* the amount of data since last stat time        */
-    double            data_this_rexmit;                       /* the amount of data in received retransmissions */ 
-    double            data_this_goodpt;                       /* the amount of data as non-lost packets         */
-    double            retransmits_fraction;                   /* how many retransmit requests there were vs received blocks */
-    double            total_retransmits_fraction;
-    double            ringfill_fraction;
-    statistics_t     *stats = &(session->transfer.stats);
-    retransmission_t  retransmission;
-    int               status;
-    static u_int32_t  iteration = 0;
-    static char       stats_line[128];
-    static char       stats_flags[8];
+	time_t now_epoch = time(NULL);	/* the current Unix epoch                         */
+	u_int64_t delta;							/* time delta since last statistics update (usec) */
+	double d_seconds;
+	u_int64_t delta_total;				/* time delta since start of transmission (usec)  */
+	double d_seconds_total;
+	u_int64_t temp;								/* temporary value for building the elapsed time  */
+	int hours, minutes, seconds, milliseconds;	/* parts of the elapsed time                      */
+	double data_total;						/* the total amount of data transferred (bytes)   */
+	double data_total_rate;
+	double data_this;							/* the amount of data since last stat time        */
+	double data_this_rexmit;			/* the amount of data in received retransmissions */
+	double data_this_goodpt;			/* the amount of data as non-lost packets         */
+	double retransmits_fraction;	/* how many retransmit requests there were vs received blocks */
+	double total_retransmits_fraction;
+	double ringfill_fraction;
+	statistics_t *stats = &(session->transfer.stats);
+	retransmission_t retransmission;
+	int status;
+	static u_int32_t iteration = 0;
+	static char stats_line[128];
+	static char stats_flags[8];
 
-    double ff, fb;
+	double ff, fb;
 
-    const double u_mega = 1024*1024;
-    const double u_giga = 1024*1024*1024;
+	const double u_mega = 1024 * 1024;
+	const double u_giga = 1024 * 1024 * 1024;
 
-    /* find the total time elapsed */
-    delta        =        get_usec_since(&stats->this_time);
-    delta_total  = temp = get_usec_since(&stats->start_time);
-    milliseconds = (temp % 1000000) / 1000;  temp /= 1000000;
-    seconds      = temp % 60;                temp /= 60;
-    minutes      = temp % 60;                temp /= 60;
-    hours        = temp;
+	/* find the total time elapsed */
+	delta = get_usec_since(&stats->this_time);
+	delta_total = temp = get_usec_since(&stats->start_time);
+	milliseconds = (temp % 1000000) / 1000;
+	temp /= 1000000;
+	seconds = temp % 60;
+	temp /= 60;
+	minutes = temp % 60;
+	temp /= 60;
+	hours = temp;
 
-    d_seconds       = delta / 1e6;
-    d_seconds_total = delta_total / 1e6;
+	d_seconds = delta / 1e6;
+	d_seconds_total = delta_total / 1e6;
 
-    /* find the amount of data transferred (bytes) */
-    data_total  = ((double) session->parameter->block_size) * stats->total_blocks;
-    data_this   = ((double) session->parameter->block_size) * (stats->total_blocks - stats->this_blocks);
-    data_this_rexmit = ((double) session->parameter->block_size) * stats->this_flow_retransmitteds;
-    data_this_goodpt = ((double) session->parameter->block_size) * stats->this_flow_originals;
-    // <=> data_this == data_this_rexmit + data_this_goodpt
+	/* find the amount of data transferred (bytes) */
+	data_total = ((double) session->parameter->block_size) * stats->total_blocks;
+	data_this = ((double) session->parameter->block_size) * (stats->total_blocks - stats->this_blocks);
+	data_this_rexmit = ((double) session->parameter->block_size) * stats->this_flow_retransmitteds;
+	data_this_goodpt = ((double) session->parameter->block_size) * stats->this_flow_originals;
+	// <=> data_this == data_this_rexmit + data_this_goodpt
 
-    /* get the current UDP receive error count reported by the operating system */
-    stats->this_udp_errors = get_udp_in_errors();
+	/* get the current UDP receive error count reported by the operating system */
+	stats->this_udp_errors = get_udp_in_errors();
 
-    /* precalculate some fractions */
-    retransmits_fraction = stats->this_retransmits / (1.0 + stats->this_retransmits + stats->total_blocks - stats->this_blocks);
-    ringfill_fraction    = session->transfer.ring_buffer->count_data / MAX_BLOCKS_QUEUED;
-    total_retransmits_fraction = stats->total_retransmits / (stats->total_retransmits + stats->total_blocks);
+	/* precalculate some fractions */
+	retransmits_fraction = stats->this_retransmits / (1.0 + stats->this_retransmits + stats->total_blocks - stats->this_blocks);
+	ringfill_fraction = session->transfer.ring_buffer->count_data / MAX_BLOCKS_QUEUED;
+	total_retransmits_fraction = stats->total_retransmits / (stats->total_retransmits + stats->total_blocks);
 
-    /* update the rate statistics */
-    // incoming transmit rate R = goodput R (Mbit/s) + retransmit R (Mbit/s)
-    stats->this_transmit_rate   = 8.0 * data_this        / (d_seconds * u_mega); 
-    stats->this_retransmit_rate = 8.0 * data_this_rexmit / (d_seconds * u_mega);
-    data_total_rate             = 8.0 * data_total       / (d_seconds_total * u_mega);
+	/* update the rate statistics */
+	// incoming transmit rate R = goodput R (Mbit/s) + retransmit R (Mbit/s)
+	stats->this_transmit_rate = 8.0 * data_this / (d_seconds * u_mega);
+	stats->this_retransmit_rate = 8.0 * data_this_rexmit / (d_seconds * u_mega);
+	data_total_rate = 8.0 * data_total / (d_seconds_total * u_mega);
 
-    fb = session->parameter->history / 100.0;  // feedback
-    ff = 1.0 - fb;                             // feedforward
+	fb = session->parameter->history / 100.0;	// feedback
+	ff = 1.0 - fb;								// feedforward
 
-    // IIR filter rate R
-    stats->transmit_rate = fb * stats->transmit_rate + ff * stats->this_transmit_rate;
+	// IIR filter rate R
+	stats->transmit_rate = fb * stats->transmit_rate + ff * stats->this_transmit_rate;
 
-    // IIR filtered composite error and loss, some sort of knee function
-    stats->error_rate = fb * stats->error_rate + ff * 500*100 * (retransmits_fraction + ringfill_fraction);
-        
-    /* send the current error rate information to the server */
-    memset(&retransmission, 0, sizeof(retransmission));
-    retransmission.request_type = htons(REQUEST_ERROR_RATE);
-    retransmission.error_rate   = htonl((u_int64_t) session->transfer.stats.error_rate);
-    status = fwrite(&retransmission, sizeof(retransmission), 1, session->server);
-    if ((status <= 0) || fflush(session->server))
-        return warn("Could not send error rate information");
+	// IIR filtered composite error and loss, some sort of knee function
+	stats->error_rate = fb * stats->error_rate + ff * 500 * 100 * (retransmits_fraction + ringfill_fraction);
 
-    /* build the stats string */    
-    sprintf(stats_flags, "%c%c",
-               ((session->transfer.restart_pending) ? 'R' : '-'),
-               (!(session->transfer.ring_buffer->space_ready) ? 'F' : '-')
-    );
-    #ifdef STATS_MATLABFORMAT
-    sprintf(stats_line, "%02d\t%02d\t%02d\t%03d\t%4u\t%6.2f\t%6.1f\t%5.1f\t%7u\t%6.1f\t%6.1f\t%5.1f\t%5d\t%5d\t%7u\t%8u\t%8Lu\t%s\n",
-    #else
-    sprintf(stats_line, "%02d:%02d:%02d.%03d %4u %6.2fM %6.1fMbps %5.1f%% %7u %6.1fG %6.1fMbps %5.1f%% %5d %5d %7u %8u %8Lu %s\n",
-    #endif
-        hours, minutes, seconds, milliseconds,
-        stats->total_blocks - stats->this_blocks,
-        stats->this_retransmit_rate,
-        stats->this_transmit_rate,
-        100.0 * retransmits_fraction,
-        session->transfer.stats.total_blocks,
-        data_total / u_giga,
-        data_total_rate,
-        100.0 * total_retransmits_fraction,
-        session->transfer.retransmit.index_max,
-        session->transfer.ring_buffer->count_data,
-        session->transfer.blocks_left, 
-        stats->this_retransmits,
-        (ull_t)(stats->this_udp_errors - stats->start_udp_errors),
-        stats_flags
-        );
+	/* send the current error rate information to the server */
+	memset(&retransmission, 0, sizeof(retransmission));
+	retransmission.request_type = htons(REQUEST_ERROR_RATE);
+	retransmission.error_rate = htonl((u_int64_t) session->transfer.stats.error_rate);
+	status = fwrite(&retransmission, sizeof(retransmission), 1, session->server);
+	if ((status <= 0) || fflush(session->server))
+		return warn("Could not send error rate information");
 
-    /* give the user a show if they want it */
-    if (session->parameter->verbose_yn) {
+	/* build the stats string */
+	sprintf(stats_flags, "%c%c",
+					((session->transfer.restart_pending) ? 'R' : '-'), (!(session->transfer.ring_buffer->space_ready) ? 'F' : '-')
+			);
+#ifdef STATS_MATLABFORMAT
+	sprintf(stats_line, "%02d\t%02d\t%02d\t%03d\t%4u\t%6.2f\t%6.1f\t%5.1f\t%7u\t%6.1f\t%6.1f\t%5.1f\t%5d\t%5d\t%7u\t%8u\t%8Lu\t%s\n",
+#else
+	sprintf(stats_line, "%02d:%02d:%02d.%03d %4u %6.2fM %6.1fMbps %5.1f%% %7u %6.1fG %6.1fMbps %5.1f%% %5d %5d %7u %8u %8Lu %s\n",
+#endif
+					hours, minutes, seconds, milliseconds,
+					stats->total_blocks - stats->this_blocks,
+					stats->this_retransmit_rate,
+					stats->this_transmit_rate,
+					100.0 * retransmits_fraction,
+					session->transfer.stats.total_blocks,
+					data_total / u_giga,
+					data_total_rate,
+					100.0 * total_retransmits_fraction,
+					session->transfer.retransmit.index_max,
+					session->transfer.ring_buffer->count_data,
+					session->transfer.blocks_left, stats->this_retransmits, (ull_t) (stats->this_udp_errors - stats->start_udp_errors), stats_flags);
 
-        /* screen mode */
-        if (session->parameter->output_mode == SCREEN_MODE) {
-            printf("\033[2J\033[H");
-            printf("Current time:   %s\n", ctime(&now_epoch));
-            printf("Elapsed time:   %02d:%02d:%02d.%03d\n\n", hours, minutes, seconds, milliseconds);
-            printf("Last interval\n--------------------------------------------------\n");
-            printf("Blocks count:     %u\n",             stats->total_blocks - stats->this_blocks);
-            printf("Data transferred: %0.2f GB\n",       data_this  / u_giga);
-            printf("Transfer rate:    %0.2f Mbps\n",     stats->this_transmit_rate);
-            printf("Retransmissions:  %u (%0.2f%%)\n\n", stats->this_retransmits, 100.0*retransmits_fraction);
-            printf("Cumulative\n--------------------------------------------------\n");
-            printf("Blocks count:     %u\n",             session->transfer.stats.total_blocks);
-            printf("Data transferred: %0.2f GB\n",       data_total / u_giga);
-            printf("Transfer rate:    %0.2f Mbps\n",     data_total_rate);
-            printf("Retransmissions:  %u (%0.2f%%)\n",   stats->total_retransmits, 100.0*total_retransmits_fraction);
-            printf("Flags          :  %s\n\n",           stats_flags);
-            printf("OS UDP rx errors: %llu\n",           (ull_t)(stats->this_udp_errors - stats->start_udp_errors));
+	/* give the user a show if they want it */
+	if (session->parameter->verbose_yn) {
 
-        /* line mode */
-        } else {
+		/* screen mode */
+		if (session->parameter->output_mode == SCREEN_MODE) {
+			printf("\033[2J\033[H");
+			printf("Current time:   %s\n", ctime(&now_epoch));
+			printf("Elapsed time:   %02d:%02d:%02d.%03d\n\n", hours, minutes, seconds, milliseconds);
+			printf("Last interval\n--------------------------------------------------\n");
+			printf("Blocks count:     %u\n", stats->total_blocks - stats->this_blocks);
+			printf("Data transferred: %0.2f GB\n", data_this / u_giga);
+			printf("Transfer rate:    %0.2f Mbps\n", stats->this_transmit_rate);
+			printf("Retransmissions:  %u (%0.2f%%)\n\n", stats->this_retransmits, 100.0 * retransmits_fraction);
+			printf("Cumulative\n--------------------------------------------------\n");
+			printf("Blocks count:     %u\n", session->transfer.stats.total_blocks);
+			printf("Data transferred: %0.2f GB\n", data_total / u_giga);
+			printf("Transfer rate:    %0.2f Mbps\n", data_total_rate);
+			printf("Retransmissions:  %u (%0.2f%%)\n", stats->total_retransmits, 100.0 * total_retransmits_fraction);
+			printf("Flags          :  %s\n\n", stats_flags);
+			printf("OS UDP rx errors: %llu\n", (ull_t) (stats->this_udp_errors - stats->start_udp_errors));
 
-            /* print a header if necessary */
-            #ifndef STATS_NOHEADER
-            if (!(iteration++ % 23)) {
-                printf("             last_interval                   transfer_total                   buffers      transfer_remaining  OS UDP\n");
-                printf("time          blk    data       rate rexmit     blk    data       rate rexmit queue  ring     blk   rt_len      err \n");
-            }
-            #endif
-            printf("%s", stats_line);
-        }
+			/* line mode */
+		} else {
 
-        /* and flush the output */
-        fflush(stdout);
-    }
+			/* print a header if necessary */
+#ifndef STATS_NOHEADER
+			if (!(iteration++ % 23)) {
+				printf("             last_interval                   transfer_total                   buffers      transfer_remaining  OS UDP\n");
+				printf("time          blk    data       rate rexmit     blk    data       rate rexmit queue  ring     blk   rt_len      err \n");
+			}
+#endif
+			printf("%s", stats_line);
+		}
 
-    /* print to the transcript if the user wants */
-    if (session->parameter->transcript_yn)
-        xscript_data_log(session, stats_line);
+		/* and flush the output */
+		fflush(stdout);
+	}
 
-    /* reset the statistics for the next interval */
-    stats->this_blocks              = stats->total_blocks;
-    stats->this_retransmits         = 0;
-    stats->this_flow_originals      = 0;
-    stats->this_flow_retransmitteds = 0;
-    gettimeofday(&(stats->this_time), NULL);
+	/* print to the transcript if the user wants */
+	if (session->parameter->transcript_yn)
+		xscript_data_log(session, stats_line);
 
-    /* indicate success */
-    return 0;
+	/* reset the statistics for the next interval */
+	stats->this_blocks = stats->total_blocks;
+	stats->this_retransmits = 0;
+	stats->this_flow_originals = 0;
+	stats->this_flow_retransmitteds = 0;
+	gettimeofday(&(stats->this_time), NULL);
+
+	/* indicate success */
+	return 0;
 }
 
 

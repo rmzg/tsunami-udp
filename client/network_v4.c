@@ -61,11 +61,11 @@
  * INFORMATION GENERATED USING SOFTWARE.
  *========================================================================*/
 
-#include <netdb.h>        /* for DNS resolver functions     */
-#include <netinet/tcp.h>  /* for TCP_NODELAY, etc.          */
-#include <string.h>       /* for standard string routines   */
-#include <sys/socket.h>   /* for the BSD socket library     */
-#include <unistd.h>       /* for standard Unix system calls */
+#include <netdb.h>							/* for DNS resolver functions     */
+#include <netinet/tcp.h>				/* for TCP_NODELAY, etc.          */
+#include <string.h>							/* for standard string routines   */
+#include <sys/socket.h>					/* for the BSD socket library     */
+#include <unistd.h>							/* for standard Unix system calls */
 
 #include <tsunami-client.h>
 
@@ -80,54 +80,54 @@
  *------------------------------------------------------------------------*/
 int create_tcp_socket_v4(ttp_session_t *session, const char *server_name, u_int16_t server_port)
 {
-    struct hostent     *host_info;
-    int                 socket_fd = -1;
-    int                 yes       =  1;
-    int                 status;
+	struct hostent *host_info;
+	int socket_fd = -1;
+	int yes = 1;
+	int status;
 
-    /* create a new address structure */
-    session->server_address = (struct sockaddr *) malloc(sizeof(struct sockaddr_in));
-    if (session->server_address == NULL)
-	error("Could not allocate space for server address");
+	/* create a new address structure */
+	session->server_address = (struct sockaddr *) malloc(sizeof(struct sockaddr_in));
+	if (session->server_address == NULL)
+		error("Could not allocate space for server address");
 
-    /* attempt a host name lookup on the server */
-    host_info = gethostbyname(server_name);
-    if (host_info == NULL)
-	return warn("Error in DNS resolution of server");
+	/* attempt a host name lookup on the server */
+	host_info = gethostbyname(server_name);
+	if (host_info == NULL)
+		return warn("Error in DNS resolution of server");
 
-    /* set the address */
-    memset(session->server_address, 0, sizeof(struct sockaddr_in));
-    ((struct sockaddr_in *) session->server_address)->sin_family = host_info->h_addrtype;
-    ((struct sockaddr_in *) session->server_address)->sin_port   = htons(server_port);
-    memcpy(&(((struct sockaddr_in *) session->server_address)->sin_addr.s_addr), host_info->h_addr_list[0], host_info->h_length);
-    session->server_address_length = sizeof(struct sockaddr_in);
+	/* set the address */
+	memset(session->server_address, 0, sizeof(struct sockaddr_in));
+	((struct sockaddr_in *) session->server_address)->sin_family = host_info->h_addrtype;
+	((struct sockaddr_in *) session->server_address)->sin_port = htons(server_port);
+	memcpy(&(((struct sockaddr_in *) session->server_address)->sin_addr.s_addr), host_info->h_addr_list[0], host_info->h_length);
+	session->server_address_length = sizeof(struct sockaddr_in);
 
-    /* create the socket */
-    socket_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (socket_fd < 0)
-	return warn("Error in creating TCP client socket");
+	/* create the socket */
+	socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+	if (socket_fd < 0)
+		return warn("Error in creating TCP client socket");
 
-    /* make the socket reusable */
-    status = setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
-    if (status < 0)
-	return warn("Error in configuring TCP client socket");
+	/* make the socket reusable */
+	status = setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
+	if (status < 0)
+		return warn("Error in configuring TCP client socket");
 
-    /* connect to the server */
-    status = connect(socket_fd, session->server_address, session->server_address_length);
-    if (status < 0) {
-	close(socket_fd);
-	return warn("Error in connecting to Tsunami server");
-    }
+	/* connect to the server */
+	status = connect(socket_fd, session->server_address, session->server_address_length);
+	if (status < 0) {
+		close(socket_fd);
+		return warn("Error in connecting to Tsunami server");
+	}
 
-    /* disable Nagle's algorithm */
-    status = setsockopt(socket_fd, IPPROTO_TCP, TCP_NODELAY, &yes, sizeof(yes));
-    if (status < 0) {
-	close(socket_fd);
-	return warn("Error in disabling Nagle's algorithm");
-    }
+	/* disable Nagle's algorithm */
+	status = setsockopt(socket_fd, IPPROTO_TCP, TCP_NODELAY, &yes, sizeof(yes));
+	if (status < 0) {
+		close(socket_fd);
+		return warn("Error in disabling Nagle's algorithm");
+	}
 
-    /* return the file desscriptor */
-    return socket_fd;
+	/* return the file desscriptor */
+	return socket_fd;
 }
 
 
@@ -140,45 +140,45 @@ int create_tcp_socket_v4(ttp_session_t *session, const char *server_name, u_int1
  *------------------------------------------------------------------------*/
 int create_udp_socket_v4(ttp_parameter_t *parameter)
 {
-    struct sockaddr_in socket_address;
-    int                socket_fd;
-    int                status;
-    int                yes = 1;
+	struct sockaddr_in socket_address;
+	int socket_fd;
+	int status;
+	int yes = 1;
 
-    /* set up the socket address */
-    memset(&socket_address, 0, sizeof(struct sockaddr_in));
-    socket_address.sin_family      = AF_INET;
-    socket_address.sin_addr.s_addr = htonl(INADDR_ANY);
-    socket_address.sin_port        = htons(parameter->client_port);
+	/* set up the socket address */
+	memset(&socket_address, 0, sizeof(struct sockaddr_in));
+	socket_address.sin_family = AF_INET;
+	socket_address.sin_addr.s_addr = htonl(INADDR_ANY);
+	socket_address.sin_port = htons(parameter->client_port);
 
-    /* create the socket */
-    socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (socket_fd < 0)
-	return warn("Error in creating UDP socket");
+	/* create the socket */
+	socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
+	if (socket_fd < 0)
+		return warn("Error in creating UDP socket");
 
-    /* make the socket reusable */
-    status = setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
-    if (status < 0) {
-	close(socket_fd);
-	return warn("Error in making UDP socket reusable");
-    }
+	/* make the socket reusable */
+	status = setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
+	if (status < 0) {
+		close(socket_fd);
+		return warn("Error in making UDP socket reusable");
+	}
 
-    /* set the receive buffer size */
-    status = setsockopt(socket_fd, SOL_SOCKET, SO_RCVBUF, &parameter->udp_buffer, sizeof(parameter->udp_buffer));
-    if (status < 0) {
-	close(socket_fd);
-	return warn("Error in resizing UDP receive buffer");
-    }
+	/* set the receive buffer size */
+	status = setsockopt(socket_fd, SOL_SOCKET, SO_RCVBUF, &parameter->udp_buffer, sizeof(parameter->udp_buffer));
+	if (status < 0) {
+		close(socket_fd);
+		return warn("Error in resizing UDP receive buffer");
+	}
 
-    /* bind the socket */
-    status = bind(socket_fd, (struct sockaddr *) &socket_address, sizeof(socket_address));
-    if (status < 0) {
-	close(socket_fd);
-	return warn("Error in binding UDP socket");
-    }
+	/* bind the socket */
+	status = bind(socket_fd, (struct sockaddr *) &socket_address, sizeof(socket_address));
+	if (status < 0) {
+		close(socket_fd);
+		return warn("Error in binding UDP socket");
+	}
 
-    /* return the file desscriptor */
-    return socket_fd;
+	/* return the file desscriptor */
+	return socket_fd;
 }
 
 

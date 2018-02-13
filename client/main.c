@@ -60,10 +60,10 @@
  * INFORMATION GENERATED USING SOFTWARE.
  *========================================================================*/
 
-#include <ctype.h>        /* for the isspace() routine             */
-#include <stdlib.h>       /* for *alloc() and free()               */
-#include <string.h>       /* for standard string routines          */
-#include <unistd.h>       /* for standard Unix system calls        */
+#include <ctype.h>							/* for the isspace() routine             */
+#include <stdlib.h>							/* for *alloc() and free()               */
+#include <string.h>							/* for standard string routines          */
+#include <unistd.h>							/* for standard Unix system calls        */
 
 #include <tsunami.h>
 #include <tsunami-client.h>
@@ -83,127 +83,136 @@ void parse_command(command_t *command, char *buffer);
  *------------------------------------------------------------------------*/
 int main(int argc, const char *argv[])
 {
-    command_t        command;                           /* the current command being processed */
-    char             command_text[MAX_COMMAND_LENGTH];  /* the raw text of the command         */
-    ttp_session_t   *session = NULL;
-    ttp_parameter_t  parameter;
-   
-    int argc_curr       = 1;                            /* command line argument currently to be processed */
-    char *ptr_command_text = &command_text[0];
-   
-    /* reset the client */
-    memset(&parameter, 0, sizeof(parameter));
-    reset_client(&parameter);
+	command_t command;						/* the current command being processed */
+	char command_text[MAX_COMMAND_LENGTH];	/* the raw text of the command         */
+	ttp_session_t *session = NULL;
+	ttp_parameter_t parameter;
 
-    /* show version / build information */
-    #ifdef VSIB_REALTIME
-    fprintf(stderr, "Tsunami Realtime Client for protocol rev %X\nRevision: %s\nCompiled: %s %s\n"
-                    "   /dev/vsib VSIB accesses mode is %d, gigabit=%d, 1pps embed=%d, sample skip=%d\n",
-            PROTOCOL_REVISION, TSUNAMI_CVS_BUILDNR, __DATE__ , __TIME__,
-            vsib_mode, vsib_mode_gigabit, vsib_mode_embed_1pps_markers, vsib_mode_skip_samples);
-    #else
-    fprintf(stderr, "Tsunami Client for protocol rev %X\nRevision: %s\nCompiled: %s %s\n",
-            PROTOCOL_REVISION, TSUNAMI_CVS_BUILDNR, __DATE__ , __TIME__);    
-    #endif
+	int argc_curr = 1;						/* command line argument currently to be processed */
+	char *ptr_command_text = &command_text[0];
 
-    /* while the command loop is still running */   
-    while (1) {
+	/* reset the client */
+	memset(&parameter, 0, sizeof(parameter));
+	reset_client(&parameter);
 
-      /* retrieve the user's commands */
-      if (argc<=1 || argc_curr>=argc) {
-         
-         /* present the prompt */
-         fprintf(stdout, "tsunami> ");
-         fflush(stdout);
-         /* read next command */
-         
-         if (fgets(command_text, MAX_COMMAND_LENGTH, stdin) == NULL) {
-            error("Could not read command input");
-         }
-         
-      } else {
-         
-         // severe TODO: check that command_text appends do not over flow MAX_COMMAND_LENGTH...
-         
-         /* assemble next command from command line arguments */
-         for ( ; argc_curr<argc; argc_curr++) {
-            // zero argument commands
-            if (!strcasecmp(argv[argc_curr], "close") || !strcasecmp(argv[argc_curr], "quit") 
-                || !strcasecmp(argv[argc_curr], "exit") || !strcasecmp(argv[argc_curr], "bye")
-                || !strcasecmp(argv[argc_curr], "help") || !strcasecmp(argv[argc_curr], "dir")) { 
-               strcpy(command_text, argv[argc_curr]);
-               argc_curr += 1;
-               break; 
-            } 
-            // single argument commands
-            if (!strcasecmp(argv[argc_curr], "connect")) {
-               if (argc_curr+1 < argc) {
-                  strcpy(ptr_command_text, argv[argc_curr]);
-                  strcat(command_text, " ");
-                  strcat(command_text, argv[argc_curr+1]);
-               } else {
-                  fprintf(stderr, "Connect: no host specified\n"); 
-                  exit(1);
-               }
-               argc_curr += 2;
-               break;
-            }
-            if (!strcasecmp(argv[argc_curr], "get")) {
-               if (argc_curr+1 < argc) {
-                  strcpy(ptr_command_text, argv[argc_curr]);
-                  strcat(command_text, " ");
-                  strcat(command_text, argv[argc_curr+1]);
-               } else {
-                  fprintf(stderr, "Get: no file specified\n"); 
-                  exit(1);
-               }
-               argc_curr += 2;
-               break;
-            }
-            // double argument commands
-            if (!strcasecmp(argv[argc_curr], "set")) {
-               if (argc_curr+2 < argc) {
-                  strcpy(ptr_command_text, argv[argc_curr]);
-                  strcat(command_text, " ");
-                  strcat(command_text, argv[argc_curr+1]);
-                  strcat(command_text, " ");
-                  strcat(command_text, argv[argc_curr+2]);
-               } else {
-                  fprintf(stderr, "Connect: no host specified\n"); 
-                  exit(1);
-               }
-               argc_curr += 3;
-               break;
-            }
-            // unknown commands, skip
-            fprintf(stderr, "Unsupported command console command: %s\n", argv[argc_curr]);
-         }
-         
-      }
+	/* show version / build information */
+#ifdef VSIB_REALTIME
+	fprintf(stderr, "Tsunami Realtime Client for protocol rev %X\nRevision: %s\nCompiled: %s %s\n"
+					"   /dev/vsib VSIB accesses mode is %d, gigabit=%d, 1pps embed=%d, sample skip=%d\n",
+					PROTOCOL_REVISION, TSUNAMI_CVS_BUILDNR, __DATE__, __TIME__,
+					vsib_mode, vsib_mode_gigabit, vsib_mode_embed_1pps_markers, vsib_mode_skip_samples);
+#else
+	fprintf(stderr, "Tsunami Client for protocol rev %X\nRevision: %s\nCompiled: %s %s\n",
+					PROTOCOL_REVISION, TSUNAMI_CVS_BUILDNR, __DATE__, __TIME__);
+#endif
 
-      /* parse the command */
-      parse_command(&command, command_text);
+	/* while the command loop is still running */
+	while (1) {
 
-      /* make sure we have at least one word */
-      if (command.count == 0)
-         continue;
-         
-      /* dispatch on the command type */
-           if (!strcasecmp(command.text[0], "close"))             command_close  (&command, session);
-      else if (!strcasecmp(command.text[0], "connect")) session = command_connect(&command, &parameter);
-      else if (!strcasecmp(command.text[0], "get"))               command_get    (&command, session);
-      else if (!strcasecmp(command.text[0], "dir"))               command_dir    (&command, session);
-      else if (!strcasecmp(command.text[0], "help"))              command_help   (&command, session);
-      else if (!strcasecmp(command.text[0], "quit"))              command_quit   (&command, session);
-      else if (!strcasecmp(command.text[0], "exit"))              command_quit   (&command, session);
-      else if (!strcasecmp(command.text[0], "bye"))               command_quit   (&command, session);
-      else if (!strcasecmp(command.text[0], "set"))               command_set    (&command, &parameter);
-      else
-          fprintf(stderr, "Unrecognized command: '%s'.  Use 'HELP' for help.\n\n", command.text[0]);
-    }
+		/* retrieve the user's commands */
+		if (argc <= 1 || argc_curr >= argc) {
 
-    /* if we're here, we shouldn't be */
-    return 1;
+			/* present the prompt */
+			fprintf(stdout, "tsunami> ");
+			fflush(stdout);
+			/* read next command */
+
+			if (fgets(command_text, MAX_COMMAND_LENGTH, stdin) == NULL) {
+				error("Could not read command input");
+			}
+
+		} else {
+
+			// severe TODO: check that command_text appends do not over flow MAX_COMMAND_LENGTH...
+
+			/* assemble next command from command line arguments */
+			for (; argc_curr < argc; argc_curr++) {
+				// zero argument commands
+				if (!strcasecmp(argv[argc_curr], "close") || !strcasecmp(argv[argc_curr], "quit")
+						|| !strcasecmp(argv[argc_curr], "exit") || !strcasecmp(argv[argc_curr], "bye")
+						|| !strcasecmp(argv[argc_curr], "help") || !strcasecmp(argv[argc_curr], "dir")) {
+					strcpy(command_text, argv[argc_curr]);
+					argc_curr += 1;
+					break;
+				}
+				// single argument commands
+				if (!strcasecmp(argv[argc_curr], "connect")) {
+					if (argc_curr + 1 < argc) {
+						strcpy(ptr_command_text, argv[argc_curr]);
+						strcat(command_text, " ");
+						strcat(command_text, argv[argc_curr + 1]);
+					} else {
+						fprintf(stderr, "Connect: no host specified\n");
+						exit(1);
+					}
+					argc_curr += 2;
+					break;
+				}
+				if (!strcasecmp(argv[argc_curr], "get")) {
+					if (argc_curr + 1 < argc) {
+						strcpy(ptr_command_text, argv[argc_curr]);
+						strcat(command_text, " ");
+						strcat(command_text, argv[argc_curr + 1]);
+					} else {
+						fprintf(stderr, "Get: no file specified\n");
+						exit(1);
+					}
+					argc_curr += 2;
+					break;
+				}
+				// double argument commands
+				if (!strcasecmp(argv[argc_curr], "set")) {
+					if (argc_curr + 2 < argc) {
+						strcpy(ptr_command_text, argv[argc_curr]);
+						strcat(command_text, " ");
+						strcat(command_text, argv[argc_curr + 1]);
+						strcat(command_text, " ");
+						strcat(command_text, argv[argc_curr + 2]);
+					} else {
+						fprintf(stderr, "Connect: no host specified\n");
+						exit(1);
+					}
+					argc_curr += 3;
+					break;
+				}
+				// unknown commands, skip
+				fprintf(stderr, "Unsupported command console command: %s\n", argv[argc_curr]);
+			}
+
+		}
+
+		/* parse the command */
+		parse_command(&command, command_text);
+
+		/* make sure we have at least one word */
+		if (command.count == 0)
+			continue;
+
+		/* dispatch on the command type */
+		if (!strcasecmp(command.text[0], "close"))
+			command_close(&command, session);
+		else if (!strcasecmp(command.text[0], "connect"))
+			session = command_connect(&command, &parameter);
+		else if (!strcasecmp(command.text[0], "get"))
+			command_get(&command, session);
+		else if (!strcasecmp(command.text[0], "dir"))
+			command_dir(&command, session);
+		else if (!strcasecmp(command.text[0], "help"))
+			command_help(&command, session);
+		else if (!strcasecmp(command.text[0], "quit"))
+			command_quit(&command, session);
+		else if (!strcasecmp(command.text[0], "exit"))
+			command_quit(&command, session);
+		else if (!strcasecmp(command.text[0], "bye"))
+			command_quit(&command, session);
+		else if (!strcasecmp(command.text[0], "set"))
+			command_set(&command, &parameter);
+		else
+			fprintf(stderr, "Unrecognized command: '%s'.  Use 'HELP' for help.\n\n", command.text[0]);
+	}
+
+	/* if we're here, we shouldn't be */
+	return 1;
 }
 
 
@@ -216,27 +225,27 @@ int main(int argc, const char *argv[])
  *------------------------------------------------------------------------*/
 void parse_command(command_t *command, char *buffer)
 {
-    /* reset the count */
-    command->count = 0;
+	/* reset the count */
+	command->count = 0;
 
-    /* skip past initial whitespace */
-    while (isspace(*buffer) && *buffer)
-	++buffer;
+	/* skip past initial whitespace */
+	while (isspace(*buffer) && *buffer)
+		++buffer;
 
-    /* while we have command text left and not too many words */
-    while ((command->count < MAX_COMMAND_WORDS) && *buffer) {
+	/* while we have command text left and not too many words */
+	while ((command->count < MAX_COMMAND_WORDS) && *buffer) {
 
-	/* save the start of the word */
-	command->text[command->count++] = buffer;
+		/* save the start of the word */
+		command->text[command->count++] = buffer;
 
-	/* advance to the next whitespace (or the end) */
-	while (*buffer && !isspace(*buffer))
-	    ++buffer;
+		/* advance to the next whitespace (or the end) */
+		while (*buffer && !isspace(*buffer))
+			++buffer;
 
-	/* convert the whitespace to terminators */
-	while (*buffer && isspace(*buffer))
-	    *(buffer++) = '\0';
-    }
+		/* convert the whitespace to terminators */
+		while (*buffer && isspace(*buffer))
+			*(buffer++) = '\0';
+	}
 }
 
 

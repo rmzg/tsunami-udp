@@ -69,54 +69,54 @@
  * Accepts the given block of data, which involves writing the block
  * to disk.  Returns 0 on success and nonzero on failure.
  *------------------------------------------------------------------------*/
-int accept_block(ttp_session_t *session, u_int32_t block_index, u_char *block)
+int accept_block(ttp_session_t *session, u_int32_t block_index, u_char * block)
 {
-    ttp_transfer_t  *transfer   = &session->transfer;
-    u_int32_t        block_size = session->parameter->block_size;
-    u_int32_t        write_size;
-    int              status;
-    #ifdef VSIB_REALTIME
-    u_int32_t       ringbuf_pointer;
-    #endif
+	ttp_transfer_t *transfer = &session->transfer;
+	u_int32_t block_size = session->parameter->block_size;
+	u_int32_t write_size;
+	int status;
+#ifdef VSIB_REALTIME
+	u_int32_t ringbuf_pointer;
+#endif
 
-    /* figure out how many bytes to write */
-    if (block_index == transfer->block_count) {
-        write_size = transfer->file_size % block_size;
-        if (write_size == 0) 
-            write_size = block_size;
-    } else {
-        write_size = block_size;
-    }
+	/* figure out how many bytes to write */
+	if (block_index == transfer->block_count) {
+		write_size = transfer->file_size % block_size;
+		if (write_size == 0)
+			write_size = block_size;
+	} else {
+		write_size = block_size;
+	}
 
-    #ifdef VSIB_REALTIME
-    /* These were added for real-time eVLBI */
-    ringbuf_pointer = ((block_index-1) % RINGBUF_BLOCKS) * session->parameter->block_size;
-    
-    if (session->parameter->ringbuf != NULL) /* If we have a ring buffer */
-        memcpy(session->parameter->ringbuf + ringbuf_pointer, block, write_size);
+#ifdef VSIB_REALTIME
+	/* These were added for real-time eVLBI */
+	ringbuf_pointer = ((block_index - 1) % RINGBUF_BLOCKS) * session->parameter->block_size;
 
-    /* check if we need to feed the VSIB */
-    write_vsib_block(session, block, write_size);
-    #endif
- 
-    #ifndef DEBUG_DISKLESS
-    /* seek to the proper location */
-    status = fseeko(transfer->file, ((u_int64_t) block_size) * (block_index - 1), SEEK_SET);
-    if (status < 0) {
-        sprintf(g_error, "Could not seek at block %d of file", block_index);
-        return warn(g_error);
-    }
+	if (session->parameter->ringbuf != NULL)	/* If we have a ring buffer */
+		memcpy(session->parameter->ringbuf + ringbuf_pointer, block, write_size);
 
-    /* write the block to disk */
-    status = fwrite(block, 1, write_size, transfer->file);
-    if (status < write_size) {
-        sprintf(g_error, "Could not write block %d of file", block_index);
-        return warn(g_error);
-    }
-    #endif
+	/* check if we need to feed the VSIB */
+	write_vsib_block(session, block, write_size);
+#endif
 
-    /* we succeeded */
-    return 0;
+#ifndef DEBUG_DISKLESS
+	/* seek to the proper location */
+	status = fseeko(transfer->file, ((u_int64_t) block_size) * (block_index - 1), SEEK_SET);
+	if (status < 0) {
+		sprintf(g_error, "Could not seek at block %d of file", block_index);
+		return warn(g_error);
+	}
+
+	/* write the block to disk */
+	status = fwrite(block, 1, write_size, transfer->file);
+	if (status < write_size) {
+		sprintf(g_error, "Could not write block %d of file", block_index);
+		return warn(g_error);
+	}
+#endif
+
+	/* we succeeded */
+	return 0;
 }
 
 

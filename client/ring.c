@@ -62,9 +62,9 @@
  * INFORMATION GENERATED USING SOFTWARE.
  *========================================================================*/
 
-#include <pthread.h>  /* for the pthreads library     */
-#include <stdlib.h>   /* for malloc(), free(), etc.   */
-#include <string.h>   /* for string-handling routines */
+#include <pthread.h>						/* for the pthreads library     */
+#include <stdlib.h>							/* for malloc(), free(), etc.   */
+#include <string.h>							/* for string-handling routines */
 
 #include <tsunami-client.h>
 
@@ -83,22 +83,22 @@ const int EMPTY = -1;
  *------------------------------------------------------------------------*/
 int ring_full(ring_buffer_t *ring)
 {
-    int status, full;
+	int status, full;
 
-    /* get a lock on the ring buffer */
-    status = pthread_mutex_lock(&ring->mutex);
-    if (status != 0)
-        error("Could not get access to ring buffer mutex");
+	/* get a lock on the ring buffer */
+	status = pthread_mutex_lock(&ring->mutex);
+	if (status != 0)
+		error("Could not get access to ring buffer mutex");
 
-    full = !ring->space_ready;
+	full = !ring->space_ready;
 
-    /* release the mutex */
-    status = pthread_mutex_unlock(&ring->mutex);
-    if (status != 0)
-        error("Could not relinquish access to ring buffer mutex");
+	/* release the mutex */
+	status = pthread_mutex_unlock(&ring->mutex);
+	if (status != 0)
+		error("Could not relinquish access to ring buffer mutex");
 
-    /* we succeeded */
-    return full;
+	/* we succeeded */
+	return full;
 }
 
 /*------------------------------------------------------------------------
@@ -109,30 +109,30 @@ int ring_full(ring_buffer_t *ring)
  *------------------------------------------------------------------------*/
 int ring_cancel(ring_buffer_t *ring)
 {
-    int status;
+	int status;
 
-    /* get a lock on the ring buffer */
-    status = pthread_mutex_lock(&ring->mutex);
-    if (status != 0)
-	error("Could not get access to ring buffer mutex");
+	/* get a lock on the ring buffer */
+	status = pthread_mutex_lock(&ring->mutex);
+	if (status != 0)
+		error("Could not get access to ring buffer mutex");
 
-    /* convert the reserved slot into space */
-    if (--(ring->count_reserved) < 0)
-	error("Attempt made to cancel unreserved slot in ring buffer");
+	/* convert the reserved slot into space */
+	if (--(ring->count_reserved) < 0)
+		error("Attempt made to cancel unreserved slot in ring buffer");
 
-    /* signal that space is available */
-    ring->space_ready = 1;
-    status = pthread_cond_signal(&ring->space_ready_cond);
-    if (status != 0)
-	error("Could not signal space-ready condition");
+	/* signal that space is available */
+	ring->space_ready = 1;
+	status = pthread_cond_signal(&ring->space_ready_cond);
+	if (status != 0)
+		error("Could not signal space-ready condition");
 
-    /* release the mutex */
-    status = pthread_mutex_unlock(&ring->mutex);
-    if (status != 0)
-	error("Could not relinquish access to ring buffer mutex");
+	/* release the mutex */
+	status = pthread_mutex_unlock(&ring->mutex);
+	if (status != 0)
+		error("Could not relinquish access to ring buffer mutex");
 
-    /* we succeeded */
-    return 0;
+	/* we succeeded */
+	return 0;
 }
 
 
@@ -145,31 +145,31 @@ int ring_cancel(ring_buffer_t *ring)
  *------------------------------------------------------------------------*/
 int ring_confirm(ring_buffer_t *ring)
 {
-    int status;
+	int status;
 
-    /* get a lock on the ring buffer */
-    status = pthread_mutex_lock(&ring->mutex);
-    if (status != 0)
-	error("Could not get access to ring buffer mutex");
+	/* get a lock on the ring buffer */
+	status = pthread_mutex_lock(&ring->mutex);
+	if (status != 0)
+		error("Could not get access to ring buffer mutex");
 
-    /* convert the reserved slot into data */
-    ++(ring->count_data);
-    if (--(ring->count_reserved) < 0)
-	error("Attempt made to confirm unreserved slot in ring buffer");
+	/* convert the reserved slot into data */
+	++(ring->count_data);
+	if (--(ring->count_reserved) < 0)
+		error("Attempt made to confirm unreserved slot in ring buffer");
 
-    /* signal that data is available */
-    ring->data_ready = 1;
-    status = pthread_cond_signal(&ring->data_ready_cond);
-    if (status != 0)
-	error("Could not signal data-ready condition");
+	/* signal that data is available */
+	ring->data_ready = 1;
+	status = pthread_cond_signal(&ring->data_ready_cond);
+	if (status != 0)
+		error("Could not signal data-ready condition");
 
-    /* release the mutex */
-    status = pthread_mutex_unlock(&ring->mutex);
-    if (status != 0)
-	error("Could not relinquish access to ring buffer mutex");
+	/* release the mutex */
+	status = pthread_mutex_unlock(&ring->mutex);
+	if (status != 0)
+		error("Could not relinquish access to ring buffer mutex");
 
-    /* we succeeded */
-    return 0;
+	/* we succeeded */
+	return 0;
 }
 
 
@@ -183,44 +183,44 @@ int ring_confirm(ring_buffer_t *ring)
  *------------------------------------------------------------------------*/
 ring_buffer_t *ring_create(ttp_session_t *session)
 {
-    ring_buffer_t *ring;
-    int            status;
+	ring_buffer_t *ring;
+	int status;
 
-    /* try to allocate the structure */
-    ring = (ring_buffer_t *) calloc(1, sizeof(*ring));
-    if (ring == NULL)
-	error("Could not allocate ring buffer object");
+	/* try to allocate the structure */
+	ring = (ring_buffer_t *) calloc(1, sizeof(*ring));
+	if (ring == NULL)
+		error("Could not allocate ring buffer object");
 
-    /* try to allocate the buffer */
-    ring->datagram_size = 6 + session->parameter->block_size;
-    ring->datagrams = (u_char *) malloc(ring->datagram_size * MAX_BLOCKS_QUEUED);
-    if (ring->datagrams == NULL)
-	error("Could not allocate buffer for ring buffer");
+	/* try to allocate the buffer */
+	ring->datagram_size = 6 + session->parameter->block_size;
+	ring->datagrams = (u_char *) malloc(ring->datagram_size * MAX_BLOCKS_QUEUED);
+	if (ring->datagrams == NULL)
+		error("Could not allocate buffer for ring buffer");
 
-    /* create the mutex */
-    status = pthread_mutex_init(&ring->mutex, NULL);
-    if (status != 0)
-	error("Could not create mutex for ring buffer");
+	/* create the mutex */
+	status = pthread_mutex_init(&ring->mutex, NULL);
+	if (status != 0)
+		error("Could not create mutex for ring buffer");
 
-    /* create the data-ready condition variable */
-    status = pthread_cond_init(&ring->data_ready_cond, NULL);
-    if (status != 0)
-	error("Could not create data-ready condition variable");
-    ring->data_ready = 0;
+	/* create the data-ready condition variable */
+	status = pthread_cond_init(&ring->data_ready_cond, NULL);
+	if (status != 0)
+		error("Could not create data-ready condition variable");
+	ring->data_ready = 0;
 
-    /* create the space-ready condition variable */
-    status = pthread_cond_init(&ring->space_ready_cond, NULL);
-    if (status != 0)
-	error("Could not create space-ready condition variable");
-    ring->space_ready = 1;
+	/* create the space-ready condition variable */
+	status = pthread_cond_init(&ring->space_ready_cond, NULL);
+	if (status != 0)
+		error("Could not create space-ready condition variable");
+	ring->space_ready = 1;
 
-    /* initialize the indices */
-    ring->count_data     = 0;
-    ring->count_reserved = 0;
-    ring->base_data      = 0;
+	/* initialize the indices */
+	ring->count_data = 0;
+	ring->count_reserved = 0;
+	ring->base_data = 0;
 
-    /* and return the ring structure */
-    return ring;
+	/* and return the ring structure */
+	return ring;
 }
 
 
@@ -233,27 +233,27 @@ ring_buffer_t *ring_create(ttp_session_t *session)
  *------------------------------------------------------------------------*/
 int ring_destroy(ring_buffer_t *ring)
 {
-    int status;
+	int status;
 
-    /* destroy the mutex */
-    status = pthread_mutex_destroy(&ring->mutex);
-    if (status != 0)
-	return warn("Could not destroy mutex for ring buffer");
+	/* destroy the mutex */
+	status = pthread_mutex_destroy(&ring->mutex);
+	if (status != 0)
+		return warn("Could not destroy mutex for ring buffer");
 
-    /* destroy the condition variables */
-    status = pthread_cond_destroy(&ring->data_ready_cond);
-    if (status != 0)
-	return warn("Could not destroy data-ready condition variable");
-    status = pthread_cond_destroy(&ring->space_ready_cond);
-    if (status != 0)
-	return warn("Could not destroy space-ready condition variable");
+	/* destroy the condition variables */
+	status = pthread_cond_destroy(&ring->data_ready_cond);
+	if (status != 0)
+		return warn("Could not destroy data-ready condition variable");
+	status = pthread_cond_destroy(&ring->space_ready_cond);
+	if (status != 0)
+		return warn("Could not destroy space-ready condition variable");
 
-    /* free the memory used */
-    free(ring->datagrams);
-    free(ring);
+	/* free the memory used */
+	free(ring->datagrams);
+	free(ring);
 
-    /* we succeeded */
-    return 0;
+	/* we succeeded */
+	return 0;
 }
 
 
@@ -263,40 +263,40 @@ int ring_destroy(ring_buffer_t *ring)
  * Dumps the current contents of the ring buffer to the given output
  * stream.  Returns zero on success and non-zero on error.
  *------------------------------------------------------------------------*/
-int ring_dump(ring_buffer_t *ring, FILE *out)
+int ring_dump(ring_buffer_t *ring, FILE * out)
 {
-    int     status;
-    int     index;
-    u_char *datagram;
+	int status;
+	int index;
+	u_char *datagram;
 
-    /* get a lock on the ring buffer */
-    status = pthread_mutex_lock(&ring->mutex);
-    if (status != 0)
-	return warn("Could not get access to ring buffer mutex");
+	/* get a lock on the ring buffer */
+	status = pthread_mutex_lock(&ring->mutex);
+	if (status != 0)
+		return warn("Could not get access to ring buffer mutex");
 
-    /* print out the top-level fields */
-    fprintf(out, "datagram_size  = %d\n", ring->datagram_size);
-    fprintf(out, "base_data      = %d\n", ring->base_data);
-    fprintf(out, "count_data     = %d\n", ring->count_data);
-    fprintf(out, "count_reserved = %d\n", ring->count_reserved);
-    fprintf(out, "data_ready     = %d\n", ring->data_ready);
-    fprintf(out, "space_ready    = %d\n", ring->space_ready);
+	/* print out the top-level fields */
+	fprintf(out, "datagram_size  = %d\n", ring->datagram_size);
+	fprintf(out, "base_data      = %d\n", ring->base_data);
+	fprintf(out, "count_data     = %d\n", ring->count_data);
+	fprintf(out, "count_reserved = %d\n", ring->count_reserved);
+	fprintf(out, "data_ready     = %d\n", ring->data_ready);
+	fprintf(out, "space_ready    = %d\n", ring->space_ready);
 
-    /* print out the block list */
-    fprintf(out, "block list     = [");
-    for (index = ring->base_data; index < ring->base_data + ring->count_data; ++index) {
-	datagram = ring->datagrams + ((index % MAX_BLOCKS_QUEUED) * ring->datagram_size);
-	fprintf(out, "%d ", ntohl(*((u_int32_t *) datagram)));
-    }
-    fprintf(out, "]\n");
+	/* print out the block list */
+	fprintf(out, "block list     = [");
+	for (index = ring->base_data; index < ring->base_data + ring->count_data; ++index) {
+		datagram = ring->datagrams + ((index % MAX_BLOCKS_QUEUED) * ring->datagram_size);
+		fprintf(out, "%d ", ntohl(*((u_int32_t *) datagram)));
+	}
+	fprintf(out, "]\n");
 
-    /* release the mutex */
-    status = pthread_mutex_unlock(&ring->mutex);
-    if (status != 0)
-	return warn("Could not relinquish access to ring buffer mutex");
+	/* release the mutex */
+	status = pthread_mutex_unlock(&ring->mutex);
+	if (status != 0)
+		return warn("Could not relinquish access to ring buffer mutex");
 
-    /* we succeeded */
-    return 0;
+	/* we succeeded */
+	return 0;
 }
 
 
@@ -308,37 +308,37 @@ int ring_dump(ring_buffer_t *ring, FILE *out)
  *------------------------------------------------------------------------*/
 u_char *ring_peek(ring_buffer_t *ring)
 {
-    int     status;
-    u_char *address;
+	int status;
+	u_char *address;
 
-    /* get a lock on the ring buffer */
-    status = pthread_mutex_lock(&ring->mutex);
-    if (status != 0) {
-	warn("Could not get access to ring buffer mutex");
-	return NULL;
-    }
-
-    /* wait for the data-ready variable to make us happy */
-    while (ring->data_ready == 0) {
-	status = pthread_cond_wait(&ring->data_ready_cond, &ring->mutex);
+	/* get a lock on the ring buffer */
+	status = pthread_mutex_lock(&ring->mutex);
 	if (status != 0) {
-	    warn("Could not wait for ring buffer to accumulate data");
-	    return NULL;
+		warn("Could not get access to ring buffer mutex");
+		return NULL;
 	}
-    }
 
-    /* find the address we want */
-    address = ring->datagrams + (ring->datagram_size * ring->base_data);
+	/* wait for the data-ready variable to make us happy */
+	while (ring->data_ready == 0) {
+		status = pthread_cond_wait(&ring->data_ready_cond, &ring->mutex);
+		if (status != 0) {
+			warn("Could not wait for ring buffer to accumulate data");
+			return NULL;
+		}
+	}
 
-    /* release the mutex */
-    status = pthread_mutex_unlock(&ring->mutex);
-    if (status != 0) {
-	warn("Could not relinquish access to ring buffer mutex");
-	return NULL;
-    }
+	/* find the address we want */
+	address = ring->datagrams + (ring->datagram_size * ring->base_data);
 
-    /* return the datagram */
-    return address;
+	/* release the mutex */
+	status = pthread_mutex_unlock(&ring->mutex);
+	if (status != 0) {
+		warn("Could not relinquish access to ring buffer mutex");
+		return NULL;
+	}
+
+	/* return the datagram */
+	return address;
 }
 
 
@@ -351,40 +351,40 @@ u_char *ring_peek(ring_buffer_t *ring)
  *------------------------------------------------------------------------*/
 int ring_pop(ring_buffer_t *ring)
 {
-    int status;
+	int status;
 
-    //printf("Popping slot %d\n", ring->base_data);
+	//printf("Popping slot %d\n", ring->base_data);
 
-    /* get a lock on the ring buffer */
-    status = pthread_mutex_lock(&ring->mutex);
-    if (status != 0)
-	error("Could not get access to ring buffer mutex");
-
-    /* wait for the data-ready variable to make us happy */
-    while (ring->data_ready == 0) {
-	status = pthread_cond_wait(&ring->data_ready_cond, &ring->mutex);
+	/* get a lock on the ring buffer */
+	status = pthread_mutex_lock(&ring->mutex);
 	if (status != 0)
-    	    error("Could not wait for ring buffer to accumulate data");
-    }
+		error("Could not get access to ring buffer mutex");
 
-    /* perform the pop operation */
-    ring->base_data = (ring->base_data + 1) % MAX_BLOCKS_QUEUED;
-    if (--(ring->count_data) == 0)
-	ring->data_ready = 0;
+	/* wait for the data-ready variable to make us happy */
+	while (ring->data_ready == 0) {
+		status = pthread_cond_wait(&ring->data_ready_cond, &ring->mutex);
+		if (status != 0)
+			error("Could not wait for ring buffer to accumulate data");
+	}
 
-    /* signal that space is available */
-    ring->space_ready = 1;
-    status = pthread_cond_signal(&ring->space_ready_cond);
-    if (status != 0)
-	error("Could not signal space-ready condition");
+	/* perform the pop operation */
+	ring->base_data = (ring->base_data + 1) % MAX_BLOCKS_QUEUED;
+	if (--(ring->count_data) == 0)
+		ring->data_ready = 0;
 
-    /* release the mutex */
-    status = pthread_mutex_unlock(&ring->mutex);
-    if (status != 0)
-	error("Could not relinquish access to ring buffer mutex");
+	/* signal that space is available */
+	ring->space_ready = 1;
+	status = pthread_cond_signal(&ring->space_ready_cond);
+	if (status != 0)
+		error("Could not signal space-ready condition");
 
-    /* we succeeded */
-    return 0;
+	/* release the mutex */
+	status = pthread_mutex_unlock(&ring->mutex);
+	if (status != 0)
+		error("Could not relinquish access to ring buffer mutex");
+
+	/* we succeeded */
+	return 0;
 }
 
 
@@ -398,43 +398,43 @@ int ring_pop(ring_buffer_t *ring)
  *------------------------------------------------------------------------*/
 u_char *ring_reserve(ring_buffer_t *ring)
 {
-    int     status;
-    int     next;
-    u_char *address;
+	int status;
+	int next;
+	u_char *address;
 
-    /* get a lock on the ring buffer */
-    status = pthread_mutex_lock(&ring->mutex);
-    if (status != 0)
-	error("Could not get access to ring buffer mutex");
-
-    /* figure out which slot comes next */
-    next = (ring->base_data + ring->count_data + ring->count_reserved) % MAX_BLOCKS_QUEUED;
-
-    /* wait for the space-ready variable to make us happy */
-    while (ring->space_ready == 0) {
-	printf("FULL! -- ring_reserve() blocking.\n");
-	printf("space_ready = %d, data_ready = %d\n", ring->space_ready, ring->data_ready);
-	status = pthread_cond_wait(&ring->space_ready_cond, &ring->mutex);
+	/* get a lock on the ring buffer */
+	status = pthread_mutex_lock(&ring->mutex);
 	if (status != 0)
-	    error("Could not wait for ring buffer to clear space");
-    }
+		error("Could not get access to ring buffer mutex");
 
-    /* perform the reservation */
-    if (++(ring->count_reserved) > 1)
-	error("Attempt made to reserve two slots in ring buffer");
-    if (((next + 1) % MAX_BLOCKS_QUEUED) == ring->base_data)
-	ring->space_ready = 0;
+	/* figure out which slot comes next */
+	next = (ring->base_data + ring->count_data + ring->count_reserved) % MAX_BLOCKS_QUEUED;
 
-    /* find the address we want */
-    address = ring->datagrams + (next * ring->datagram_size);
+	/* wait for the space-ready variable to make us happy */
+	while (ring->space_ready == 0) {
+		printf("FULL! -- ring_reserve() blocking.\n");
+		printf("space_ready = %d, data_ready = %d\n", ring->space_ready, ring->data_ready);
+		status = pthread_cond_wait(&ring->space_ready_cond, &ring->mutex);
+		if (status != 0)
+			error("Could not wait for ring buffer to clear space");
+	}
 
-    /* release the mutex */
-    status = pthread_mutex_unlock(&ring->mutex);
-    if (status != 0)
-	error("Could not relinquish access to ring buffer mutex");
+	/* perform the reservation */
+	if (++(ring->count_reserved) > 1)
+		error("Attempt made to reserve two slots in ring buffer");
+	if (((next + 1) % MAX_BLOCKS_QUEUED) == ring->base_data)
+		ring->space_ready = 0;
 
-    /* return the address */
-    return address;
+	/* find the address we want */
+	address = ring->datagrams + (next * ring->datagram_size);
+
+	/* release the mutex */
+	status = pthread_mutex_unlock(&ring->mutex);
+	if (status != 0)
+		error("Could not relinquish access to ring buffer mutex");
+
+	/* return the address */
+	return address;
 }
 
 

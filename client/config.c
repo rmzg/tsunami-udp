@@ -60,8 +60,8 @@
  * INFORMATION GENERATED USING SOFTWARE.
  *========================================================================*/
 
-#include <stdlib.h>  /* for malloc(), free(), etc. */
-#include <string.h>  /* for memset()               */
+#include <stdlib.h>							/* for malloc(), free(), etc. */
+#include <string.h>							/* for memset()               */
 
 #include <tsunami-client.h>
 
@@ -70,31 +70,31 @@
  * Global constants.
  *------------------------------------------------------------------------*/
 
-const u_int32_t  DEFAULT_BLOCK_SIZE    = 1024;         /* default size of a single file block          */
-const int        DEFAULT_TABLE_SIZE    = 4096;         /* initial size of the retransmission table     */
-const char      *DEFAULT_SERVER_NAME   = "localhost";  /* default name of the remote server            */
-const u_int16_t  DEFAULT_SERVER_PORT   = TS_TCP_PORT;  /* default TCP port of the remote server        */
-const u_int16_t  DEFAULT_CLIENT_PORT   = TS_UDP_PORT;  /* default UDP port of the client               */
-const u_int32_t  DEFAULT_UDP_BUFFER    = 20000000;     /* default size of the UDP receive buffer       */
-const u_char     DEFAULT_VERBOSE_YN    = 1;            /* the default verbosity setting                */
-const u_char     DEFAULT_TRANSCRIPT_YN = 0;            /* the default transcript setting               */
-const u_char     DEFAULT_IPV6_YN       = 0;            /* the default IPv6 setting                     */
-const u_char     DEFAULT_OUTPUT_MODE   = LINE_MODE;    /* the default output mode (SCREEN or LINE)     */
-const u_char     DEFAULT_RATE_ADJUST   = 0;            /* the default for remembering achieved rate    */
-const u_int32_t  DEFAULT_TARGET_RATE   = 650000000;    /* the default target rate (in bps)             */
-const u_int32_t  DEFAULT_ERROR_RATE    = 7500;         /* the default threshhold error rate (% x 1000) */
-const u_int16_t  DEFAULT_SLOWER_NUM    = 25;           /* default numerator in the slowdown factor     */
-const u_int16_t  DEFAULT_SLOWER_DEN    = 24;           /* default denominator in the slowdown factor   */
-const u_int16_t  DEFAULT_FASTER_NUM    = 5;            /* default numerator in the speedup factor      */
-const u_int16_t  DEFAULT_FASTER_DEN    = 6;            /* default denominator in the speedup factor    */
-const u_int16_t  DEFAULT_HISTORY       = 25;           /* default percentage of history in rates       */
-const u_char     DEFAULT_NO_RETRANSMIT = 0;            /* on default use retransmission                */
-const u_char     DEFAULT_LOSSLESS      = 1;            /* default to lossless transfer                 */
-const u_int32_t  DEFAULT_LOSSWINDOW_MS = 1000;         /* default time window (msec) for semi-lossless */
+const u_int32_t DEFAULT_BLOCK_SIZE = 1024;	/* default size of a single file block          */
+const int DEFAULT_TABLE_SIZE = 4096;	/* initial size of the retransmission table     */
+const char *DEFAULT_SERVER_NAME = "localhost";	/* default name of the remote server            */
+const u_int16_t DEFAULT_SERVER_PORT = TS_TCP_PORT;	/* default TCP port of the remote server        */
+const u_int16_t DEFAULT_CLIENT_PORT = TS_UDP_PORT;	/* default UDP port of the client               */
+const u_int32_t DEFAULT_UDP_BUFFER = 20000000;	/* default size of the UDP receive buffer       */
+const u_char DEFAULT_VERBOSE_YN = 1;	/* the default verbosity setting                */
+const u_char DEFAULT_TRANSCRIPT_YN = 0;	/* the default transcript setting               */
+const u_char DEFAULT_IPV6_YN = 0;	/* the default IPv6 setting                     */
+const u_char DEFAULT_OUTPUT_MODE = LINE_MODE;	/* the default output mode (SCREEN or LINE)     */
+const u_char DEFAULT_RATE_ADJUST = 0;	/* the default for remembering achieved rate    */
+const u_int32_t DEFAULT_TARGET_RATE = 650000000;	/* the default target rate (in bps)             */
+const u_int32_t DEFAULT_ERROR_RATE = 7500;	/* the default threshhold error rate (% x 1000) */
+const u_int16_t DEFAULT_SLOWER_NUM = 25;	/* default numerator in the slowdown factor     */
+const u_int16_t DEFAULT_SLOWER_DEN = 24;	/* default denominator in the slowdown factor   */
+const u_int16_t DEFAULT_FASTER_NUM = 5;	/* default numerator in the speedup factor      */
+const u_int16_t DEFAULT_FASTER_DEN = 6;	/* default denominator in the speedup factor    */
+const u_int16_t DEFAULT_HISTORY = 25;	/* default percentage of history in rates       */
+const u_char DEFAULT_NO_RETRANSMIT = 0;	/* on default use retransmission                */
+const u_char DEFAULT_LOSSLESS = 1;	/* default to lossless transfer                 */
+const u_int32_t DEFAULT_LOSSWINDOW_MS = 1000;	/* default time window (msec) for semi-lossless */
 
-const u_char     DEFAULT_BLOCKDUMP     = 0;            /* on default do not write bitmap dump to file  */
+const u_char DEFAULT_BLOCKDUMP = 0;	/* on default do not write bitmap dump to file  */
 
-const int        MAX_COMMAND_LENGTH    = 1024;         /* maximum length of a single command           */
+const int MAX_COMMAND_LENGTH = 1024;	/* maximum length of a single command           */
 
 
 /*------------------------------------------------------------------------
@@ -104,38 +104,38 @@ const int        MAX_COMMAND_LENGTH    = 1024;         /* maximum length of a si
  *------------------------------------------------------------------------*/
 void reset_client(ttp_parameter_t *parameter)
 {
-    /* free the previous hostname if necessary */
-    if (parameter->server_name != NULL)
-	free(parameter->server_name);
+	/* free the previous hostname if necessary */
+	if (parameter->server_name != NULL)
+		free(parameter->server_name);
 
-    /* zero out the memory structure */
-    memset(parameter, 0, sizeof(*parameter));
+	/* zero out the memory structure */
+	memset(parameter, 0, sizeof(*parameter));
 
-    /* fill the fields with their defaults */
-    parameter->block_size    = DEFAULT_BLOCK_SIZE;
-    parameter->server_name   = strdup(DEFAULT_SERVER_NAME);
-    parameter->server_port   = DEFAULT_SERVER_PORT;
-    parameter->client_port   = DEFAULT_CLIENT_PORT;
-    parameter->udp_buffer    = DEFAULT_UDP_BUFFER;
-    parameter->verbose_yn    = DEFAULT_VERBOSE_YN;
-    parameter->transcript_yn = DEFAULT_TRANSCRIPT_YN;
-    parameter->ipv6_yn       = DEFAULT_IPV6_YN;
-    parameter->output_mode   = DEFAULT_OUTPUT_MODE;
-    parameter->target_rate   = DEFAULT_TARGET_RATE;
-    parameter->rate_adjust   = DEFAULT_RATE_ADJUST;
-    parameter->error_rate    = DEFAULT_ERROR_RATE;
-    parameter->slower_num    = DEFAULT_SLOWER_NUM;
-    parameter->slower_den    = DEFAULT_SLOWER_DEN;
-    parameter->faster_num    = DEFAULT_FASTER_NUM;
-    parameter->faster_den    = DEFAULT_FASTER_DEN;
-    parameter->history       = DEFAULT_HISTORY;
-    parameter->lossless      = DEFAULT_LOSSLESS;
-    parameter->losswindow_ms = DEFAULT_LOSSWINDOW_MS;
-    parameter->blockdump     = DEFAULT_BLOCKDUMP;
+	/* fill the fields with their defaults */
+	parameter->block_size = DEFAULT_BLOCK_SIZE;
+	parameter->server_name = strdup(DEFAULT_SERVER_NAME);
+	parameter->server_port = DEFAULT_SERVER_PORT;
+	parameter->client_port = DEFAULT_CLIENT_PORT;
+	parameter->udp_buffer = DEFAULT_UDP_BUFFER;
+	parameter->verbose_yn = DEFAULT_VERBOSE_YN;
+	parameter->transcript_yn = DEFAULT_TRANSCRIPT_YN;
+	parameter->ipv6_yn = DEFAULT_IPV6_YN;
+	parameter->output_mode = DEFAULT_OUTPUT_MODE;
+	parameter->target_rate = DEFAULT_TARGET_RATE;
+	parameter->rate_adjust = DEFAULT_RATE_ADJUST;
+	parameter->error_rate = DEFAULT_ERROR_RATE;
+	parameter->slower_num = DEFAULT_SLOWER_NUM;
+	parameter->slower_den = DEFAULT_SLOWER_DEN;
+	parameter->faster_num = DEFAULT_FASTER_NUM;
+	parameter->faster_den = DEFAULT_FASTER_DEN;
+	parameter->history = DEFAULT_HISTORY;
+	parameter->lossless = DEFAULT_LOSSLESS;
+	parameter->losswindow_ms = DEFAULT_LOSSWINDOW_MS;
+	parameter->blockdump = DEFAULT_BLOCKDUMP;
 
-    /* make sure the strdup() worked */
-    if (parameter->server_name == NULL)
-      error("Could not reset default server name");
+	/* make sure the strdup() worked */
+	if (parameter->server_name == NULL)
+		error("Could not reset default server name");
 }
 
 

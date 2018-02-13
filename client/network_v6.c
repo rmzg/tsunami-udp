@@ -63,12 +63,12 @@
 
 #include <arpa/inet.h>
 #include <errno.h>
-#include <netdb.h>        /* for DNS resolver functions     */
-#include <netinet/tcp.h>  /* for TCP_NODELAY, etc.          */
-#include <string.h>       /* for standard string routines   */
-#include <sys/socket.h>   /* for the BSD socket library     */
-#include <sys/types.h>    /* for standard system data types */
-#include <unistd.h>       /* for standard Unix system calls */
+#include <netdb.h>							/* for DNS resolver functions     */
+#include <netinet/tcp.h>				/* for TCP_NODELAY, etc.          */
+#include <string.h>							/* for standard string routines   */
+#include <sys/socket.h>					/* for the BSD socket library     */
+#include <sys/types.h>					/* for standard system data types */
+#include <unistd.h>							/* for standard Unix system calls */
 
 #include <tsunami-client.h>
 
@@ -83,75 +83,75 @@
  *------------------------------------------------------------------------*/
 int create_tcp_socket_v6(ttp_session_t *session, const char *server_name, u_int16_t server_port)
 {
-    struct addrinfo  hints;
-    struct addrinfo *info;
-    struct addrinfo *info_save;
-    char             buffer[10];
-    int              socket_fd;
-    int              status;
-    int              yes = 1;
+	struct addrinfo hints;
+	struct addrinfo *info;
+	struct addrinfo *info_save;
+	char buffer[10];
+	int socket_fd;
+	int status;
+	int yes = 1;
 
-    /* set up the hints for getaddrinfo() */
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_family   = AF_INET6;
-    hints.ai_socktype = SOCK_STREAM;
+	/* set up the hints for getaddrinfo() */
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_INET6;
+	hints.ai_socktype = SOCK_STREAM;
 
-    /* try to get address info for the server */
-    sprintf(buffer, "%d", server_port);
-    status = getaddrinfo(server_name, buffer, &hints, &info);
-    if (status)
-	return warn("Error in getting address information for server");
+	/* try to get address info for the server */
+	sprintf(buffer, "%d", server_port);
+	status = getaddrinfo(server_name, buffer, &hints, &info);
+	if (status)
+		return warn("Error in getting address information for server");
 
-    /* for each address structure returned */
-    info_save = info;
-    do {
+	/* for each address structure returned */
+	info_save = info;
+	do {
 
-	/* try to create a socket of this type */
-	socket_fd = socket(info->ai_family, info->ai_socktype, info->ai_protocol);
-	if (socket_fd < 0) {
-	    warn("Could not create socket");
-	    continue;
-	}
+		/* try to create a socket of this type */
+		socket_fd = socket(info->ai_family, info->ai_socktype, info->ai_protocol);
+		if (socket_fd < 0) {
+			warn("Could not create socket");
+			continue;
+		}
 
-	/* make the socket reusable */
-	status = setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
-	if (status < 0) {
-	    warn("Could not make socket reusable");
-	    close(socket_fd);
-	    continue;
-	}
+		/* make the socket reusable */
+		status = setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
+		if (status < 0) {
+			warn("Could not make socket reusable");
+			close(socket_fd);
+			continue;
+		}
 
-	/* disable Nagle's algorithm */
-	status = setsockopt(socket_fd, IPPROTO_TCP, TCP_NODELAY, &yes, sizeof(yes));
-	if (status < 0) {
-	    warn("Could not disable Nagle's algorithm");
-	    close(socket_fd);
-	    continue;
-	}
+		/* disable Nagle's algorithm */
+		status = setsockopt(socket_fd, IPPROTO_TCP, TCP_NODELAY, &yes, sizeof(yes));
+		if (status < 0) {
+			warn("Could not disable Nagle's algorithm");
+			close(socket_fd);
+			continue;
+		}
 
-	/* try to connect to the server */
-	status = connect(socket_fd, info->ai_addr, info->ai_addrlen);
-	if (status == 0) {
+		/* try to connect to the server */
+		status = connect(socket_fd, info->ai_addr, info->ai_addrlen);
+		if (status == 0) {
 
-	    /* copy the address */
-	    session->server_address = (struct sockaddr *) malloc(info->ai_addrlen);
-	    if (session->server_address == NULL)
-		error("Could not allocate space for server address");
-	    memcpy(session->server_address, info->ai_addr, info->ai_addrlen);
-	    break;
-	}
+			/* copy the address */
+			session->server_address = (struct sockaddr *) malloc(info->ai_addrlen);
+			if (session->server_address == NULL)
+				error("Could not allocate space for server address");
+			memcpy(session->server_address, info->ai_addr, info->ai_addrlen);
+			break;
+		}
 
-    } while ((info = info->ai_next) != NULL);
+	} while ((info = info->ai_next) != NULL);
 
-    /* free the allocated memory */
-    freeaddrinfo(info_save);
+	/* free the allocated memory */
+	freeaddrinfo(info_save);
 
-    /* make sure that we succeeded with at least one address */
-    if (info == NULL)
-	return warn("Error in connecting to Tsunami server");
+	/* make sure that we succeeded with at least one address */
+	if (info == NULL)
+		return warn("Error in connecting to Tsunami server");
 
-    /* return the file desscriptor */
-    return socket_fd;
+	/* return the file desscriptor */
+	return socket_fd;
 }
 
 
@@ -164,65 +164,65 @@ int create_tcp_socket_v6(ttp_session_t *session, const char *server_name, u_int1
  *------------------------------------------------------------------------*/
 int create_udp_socket_v6(ttp_parameter_t *parameter)
 {
-    struct addrinfo  hints;
-    struct addrinfo *info;
-    struct addrinfo *info_save;
-    char             buffer[10];
-    int              socket_fd;
-    int              yes = 1;
-    int              status;
+	struct addrinfo hints;
+	struct addrinfo *info;
+	struct addrinfo *info_save;
+	char buffer[10];
+	int socket_fd;
+	int yes = 1;
+	int status;
 
-    /* set up the hints for getaddrinfo() */
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_flags    = AI_PASSIVE;
-    hints.ai_family   = AF_INET6;
-    hints.ai_socktype = SOCK_DGRAM;
+	/* set up the hints for getaddrinfo() */
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_flags = AI_PASSIVE;
+	hints.ai_family = AF_INET6;
+	hints.ai_socktype = SOCK_DGRAM;
 
-    /* try to get address info for ourselves */
-    sprintf(buffer, "%d", parameter->server_port);
-    status = getaddrinfo(NULL, buffer, &hints, &info);
-    if (status)
-	return warn("Error in getting address information");
+	/* try to get address info for ourselves */
+	sprintf(buffer, "%d", parameter->server_port);
+	status = getaddrinfo(NULL, buffer, &hints, &info);
+	if (status)
+		return warn("Error in getting address information");
 
-    /* for each address structure returned */
-    info_save = info;
-    do {
+	/* for each address structure returned */
+	info_save = info;
+	do {
 
-	/* try to create a socket of this type */
-	socket_fd = socket(info->ai_family, info->ai_socktype, info->ai_protocol);
-	if (socket_fd < 0)
-	    continue;
+		/* try to create a socket of this type */
+		socket_fd = socket(info->ai_family, info->ai_socktype, info->ai_protocol);
+		if (socket_fd < 0)
+			continue;
 
-	/* make the socket reusable */
-	status = setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
-	if (status < 0) {
-	    close(socket_fd);
-	    continue;
-	}
+		/* make the socket reusable */
+		status = setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
+		if (status < 0) {
+			close(socket_fd);
+			continue;
+		}
 
-	/* set the receive buffer size */
-	status = setsockopt(socket_fd, SOL_SOCKET, SO_RCVBUF, &parameter->udp_buffer, sizeof(parameter->udp_buffer));
-	if (status < 0) {
-	    close(socket_fd);
-	    continue;
-	}
+		/* set the receive buffer size */
+		status = setsockopt(socket_fd, SOL_SOCKET, SO_RCVBUF, &parameter->udp_buffer, sizeof(parameter->udp_buffer));
+		if (status < 0) {
+			close(socket_fd);
+			continue;
+		}
 
-	/* and try to bind it */
-	status = bind(socket_fd, info->ai_addr, info->ai_addrlen);
-	if (status == 0)
-	    break;
+		/* and try to bind it */
+		status = bind(socket_fd, info->ai_addr, info->ai_addrlen);
+		if (status == 0)
+			break;
 
-    } while ((info = info->ai_next) != NULL);
+	} while ((info = info->ai_next) != NULL);
 
-    /* free the allocated memory */
-    freeaddrinfo(info_save);
+	/* free the allocated memory */
+	freeaddrinfo(info_save);
 
-    /* make sure that we succeeded with at least one address */
-    if (info == NULL)
-	return warn("Error in creating UDP socket");
+	/* make sure that we succeeded with at least one address */
+	if (info == NULL)
+		return warn("Error in creating UDP socket");
 
-    /* return the file desscriptor */
-    return socket_fd;
+	/* return the file desscriptor */
+	return socket_fd;
 }
 
 
