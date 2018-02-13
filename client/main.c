@@ -201,9 +201,9 @@ int main(int argc, const char *argv[])
 		else
 			fprintf(stderr, "Unrecognized command: '%s'.  Use 'HELP' for help.\n\n", command.text[0]);
 
-		/*for( int i = 0; i < command.count; i++ ) {*/
-			/*free( command.text[i] );*/
-		/*}*/
+		for( int i = 0; i < command.count; i++ ) {
+			free( command.text[i] );
+		}
 	}
 
 	/* if we're here, we shouldn't be */
