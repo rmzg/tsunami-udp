@@ -1,1 +1,10 @@
 .*.swp
+*.o
+*.a
+client/tsunami
+rtclient/rttsunami
+rtserver/rttsunamid
+server/tsunamid
+util/fusereadtest
+util/readtest
+util/writetest
